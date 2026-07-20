@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Hambledon Hilly | Trail Run at Hambledon Vineyard</title>
+<meta name="description" content="The Hambledon Hilly returns to Hambledon Vineyard on 19 September 2026. Choose from 1k, 2k, 5k, 10k and Trail 20k routes, then enjoy food and drink at race HQ.">
+<link rel="icon" type="image/svg+xml" href="images/hambledonhilly-logo.svg">
+<link rel="preconnect" href="https://unpkg.com">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="home">
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="#top">
+      <img class="brand-logo" src="images/hambledonhilly-logo.svg" alt="The Hambledon Hilly">
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="#about">About</a>
+      <a href="#routes">Routes</a>
+      <a href="race-info.html">Race Info</a>
+      <a href="#day">On the Day</a>
+      <a href="#sponsors">Sponsors</a>
+      <a href="#location">Location</a>
+      <a href="our-story.html">Our Story</a>
+    </nav>
+    <a class="btn btn-primary nav-cta" href="https://racesignup.co.uk/hambledon-hilly" target="_blank" rel="noopener">Sign Up</a>
+    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="hero-media">
+      <img src="images/LandingPageImage.jpeg" alt="Runners on the trail at the Hambledon Hilly, with the vineyard in the background" loading="eager">
+      <div class="hero-scrim"></div>
+    </div>
+    <div class="wrap hero-content">
+      <p class="hero-eyebrow">Saturday 19 September 2026 &middot; Hambledon Vineyard</p>
+      <h1>Run the Hilly.<br>Stay for the Vineyard.</h1>
+      <p class="hero-lede">
+        A scenic trail run through England's oldest commercial vineyard, followed by
+        an afternoon of food and drink at race HQ. Choose your distance &mdash; from a
+        1k or 2k family fun run to the 5k, 10k or self-navigated Trail 20k &mdash;
+        and join us for a brilliant day out.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary btn-lg" href="https://racesignup.co.uk/hambledon-hilly" target="_blank" rel="noopener">Enter the Race</a>
+        <a class="btn btn-ghost btn-lg" href="#routes">View the Routes</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" class="section">
+    <div class="wrap about-grid">
+      <div class="about-copy">
+        <h2>Welcome back to the Vineyard</h2>
+        <p>
+          The Hambledon Hilly returns to the stunning Hambledon Vineyard, England's oldest
+          commercial vineyard, on <strong>19 September 2026</strong>. Join us for a day of
+          scenic running, and superb food and drink in this beautiful part of the world.
+        </p>
+        <p>
+          At race HQ within the Hambledon Wine Estate, the vineyard team will be serving
+          high-quality food and beverages, including its award-winning sparkling wine. We're
+          hoping that runners, families, volunteers and supporters will stay with us right
+          through into the afternoon to enjoy the event and help us raise money for
+          <strong><a href="https://braintumourresearch.org/" target="_blank" rel="noopener">Brain Tumour Research</a></strong> and <strong>Hambledon Primary School</strong>.
+        </p>
+        <p>
+          The main vineyard visitors centre will also be open on the day for tours, tasting
+          and dining. Bookings should be made well in advance at
+          <a href="https://www.hambledonvineyard.co.uk" target="_blank" rel="noopener">hambledonvineyard.co.uk</a>.
+        </p>
+      </div>
+      <div class="about-facts">
+        <div class="fact-card">
+          <span class="fact-label">Date</span>
+          <span class="fact-value">Saturday 19 September 2026</span>
+        </div>
+        <div class="fact-card">
+          <span class="fact-label">Venue</span>
+          <span class="fact-value">Hambledon Vineyard, Hambledon Wine Estate</span>
+        </div>
+        <div class="fact-card">
+          <span class="fact-label">Distances</span>
+          <span class="fact-value">1k &middot; 2k &middot; 5k &middot; 10k &middot; Trail 20k</span>
+        </div>
+        <div class="fact-card">
+          <span class="fact-label">In aid of</span>
+          <span class="fact-value"><a href="https://braintumourresearch.org/" target="_blank" rel="noopener">Brain Tumour Research</a> &amp; Hambledon Primary School</span>
+        </div>
+        <div class="fact-card">
+          <span class="fact-label">Entries close</span>
+          <span class="fact-value">16 September 2026</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="routes" class="section section-alt">
+    <div class="wrap">
+      <h2>Choose Your Route</h2>
+      <p class="section-lede">All races start and finish at race HQ within the vineyard estate. Pick a distance to see the course, start time and entry fee. Full course descriptions and race-day details are on the <a href="race-info.html">Race Info</a> page.</p>
+
+      <div class="route-tabs" role="tablist" aria-label="Route distance">
+        <button class="route-tab" data-route="1k" role="tab" aria-selected="false">1k</button>
+        <button class="route-tab" data-route="2k" role="tab" aria-selected="false">2k</button>
+        <button class="route-tab" data-route="5k" role="tab" aria-selected="false">5k</button>
+        <button class="route-tab" data-route="10k" role="tab" aria-selected="false">10k</button>
+        <button class="route-tab is-active" data-route="20k" role="tab" aria-selected="true">Trail 20k</button>
+      </div>
+
+      <div class="route-panel">
+        <div id="route-map" class="route-map" role="img" aria-label="Map of the selected route"></div>
+        <div class="route-stats" id="route-stats">
+          <!-- populated by js -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="day" class="section">
+    <div class="wrap day-grid">
+      <div class="day-copy">
+        <h2>On the Day</h2>
+        <p>
+          Stick around at race HQ and make an afternoon of it. The vineyard team will be
+          serving food and drink &mdash; including their award-winning sparkling wine &mdash;
+          right through the afternoon, with plenty to enjoy for runners, families,
+          volunteers and supporters alike.
+        </p>
+        <ul class="day-list">
+          <li>Food and drink from the Hambledon Vineyard team</li>
+          <li>Award-winning sparkling wine, tastings and tours</li>
+          <li>A finish-line atmosphere for the whole family</li>
+          <li>All proceeds help <a href="https://braintumourresearch.org/" target="_blank" rel="noopener">Brain Tumour Research</a> and Hambledon Primary School</li>
+        </ul>
+        <p>
+          Fancy making a day of it? Book a vineyard tour, tasting or table well in advance at
+          <a href="https://www.hambledonvineyard.co.uk" target="_blank" rel="noopener">hambledonvineyard.co.uk</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="sponsors" class="section section-alt">
+    <div class="wrap">
+      <h2>With Thanks to Our Sponsors</h2>
+      <p class="section-lede">The Hambledon Hilly wouldn't be possible without the generous support of our sponsors.</p>
+      <div class="sponsor-grid">
+        <a class="sponsor-card sponsor-card-main" href="https://www.demellowandco.com/" target="_blank" rel="noopener">
+          <div class="sponsor-logo"><img src="images/DeMellowCo.avif" alt="De Mellow &amp; Co logo"></div>
+        </a>
+        <a class="sponsor-card" href="https://www.countryhousecompany.co.uk/" target="_blank" rel="noopener">
+          <div class="sponsor-logo"><img src="images/CountrytHouseCompany.png" alt="Country House Company logo"></div>
+        </a>
+        <a class="sponsor-card" href="https://www.hartridges.co.uk/" target="_blank" rel="noopener">
+          <div class="sponsor-logo"><img src="images/Hartriges.jpeg" alt="Hartridges Soft Drinks logo"></div>
+        </a>
+        <a class="sponsor-card" href="https://www.bowman-ales.com/" target="_blank" rel="noopener">
+          <div class="sponsor-logo"><img src="images/BowmanAles.png" alt="Bowman Ales logo"></div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section id="location" class="section">
+    <div class="wrap location-grid">
+      <div class="location-copy">
+        <h2>Getting There</h2>
+        <p>
+          Race HQ is based at Hambledon Vineyard, PO7 4RY (what3words:
+          <strong>rezoning.pulsing.swift</strong>), home to England's oldest commercial
+          vineyard, in the heart of the Hampshire countryside. Race HQ itself is in the
+          big white marquee behind the Vineyard Restaurant.
+        </p>
+        <p>
+          Parking is available on the estate and marshals will direct you on arrival.
+        </p>
+        <a class="btn btn-primary" href="https://www.hambledonvineyard.co.uk" target="_blank" rel="noopener">Visit Hambledon Vineyard</a>
+      </div>
+      <div id="location-map" class="location-map" role="img" aria-label="Map of Hambledon Vineyard"></div>
+    </div>
+  </section>
+
+  <section class="cta-banner">
+    <div class="wrap cta-banner-inner">
+      <h2>Ready to take on the Hilly?</h2>
+      <a class="btn btn-primary btn-lg" href="https://racesignup.co.uk/hambledon-hilly" target="_blank" rel="noopener">Enter Now</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <img class="footer-logo" src="images/hambledonhilly-logo.svg" alt="The Hambledon Hilly">
+    <p>&copy; 2026 The Hambledon Hilly. Held at Hambledon Vineyard in aid of Brain Tumour Research and Hambledon Primary School.</p>
+    <nav class="footer-nav" aria-label="Footer">
+      <a href="race-info.html">Race Info</a>
+      <a href="our-story.html">Our Story</a>
+      <a href="https://racesignup.co.uk/hambledon-hilly" target="_blank" rel="noopener">Sign Up</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="routes/routes-data.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
