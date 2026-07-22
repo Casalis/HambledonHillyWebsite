@@ -485,6 +485,10 @@ body.home .site-header.is-scrolled .brand-logo {
 }
 
 @media (max-width: 720px) {
+  .header-inner { height: auto; min-height: 72px; flex-wrap: wrap; padding: 12px 0; }
+  .brand { margin-top: 0; align-self: center; }
+  body.home .brand-logo { height: 64px; margin-top: 0; }
+  body.home .site-header.is-scrolled .brand-logo { height: 44px; }
   .site-nav { display: none; }
   .nav-toggle { display: flex; }
   .nav-cta { display: none; }
@@ -492,7 +496,7 @@ body.home .site-header.is-scrolled .brand-logo {
     display: flex;
     flex-direction: column;
     position: absolute;
-    top: 72px;
+    top: 100%;
     left: 0;
     right: 0;
     background: var(--cream);
