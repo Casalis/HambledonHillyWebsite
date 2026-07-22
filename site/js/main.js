@@ -65,7 +65,7 @@ let finishMarker;
 let vineyardMarker;
 
 function initRouteMap() {
-  routeMap = L.map('route-map', { scrollWheelZoom: false });
+  routeMap = L.map('route-map', { scrollWheelZoom: false, gestureHandling: true });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
     attribution: '&copy; OpenStreetMap contributors',
@@ -184,7 +184,7 @@ if (document.getElementById('route-map')) {
 const locationMapEl = document.getElementById('location-map');
 if (locationMapEl && typeof ROUTES !== 'undefined') {
   const center = ROUTES['5k'].points[0];
-  const locationMap = L.map('location-map', { scrollWheelZoom: false }).setView(center, 14);
+  const locationMap = L.map('location-map', { scrollWheelZoom: false, gestureHandling: true }).setView(center, 14);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
     attribution: '&copy; OpenStreetMap contributors',
