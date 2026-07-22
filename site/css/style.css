@@ -100,25 +100,12 @@ a { color: var(--gold-700); }
   color: var(--dark-900);
   font-weight: 700;
   margin-right: auto;
-  margin-top: 10px;
-  align-self: flex-start;
 }
 .brand-logo {
-  height: 44px;
+  height: 56px;
   width: auto;
   border-radius: 8px;
   display: block;
-}
-
-/* Large mark that shrinks into the header on scroll — home page only */
-body.home .brand-logo {
-  height: 200px;
-  margin-top: 10px;
-  transition: height 0.25s ease;
-}
-body.home .site-header.is-scrolled .brand-logo {
-  height: 44px;
-  margin-top: 0;
 }
 
 .site-nav {
@@ -164,10 +151,30 @@ body.home .site-header.is-scrolled .brand-logo {
   inset: 0;
   z-index: 0;
 }
-.hero-media img {
-  width: 100%;
+.hero-scroll {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.hero-scroll-track {
+  display: flex;
   height: 100%;
+  width: max-content;
+  animation: hero-scroll 90s linear infinite;
+}
+.hero-scroll-track img {
+  height: 100%;
+  width: clamp(220px, 26vw, 380px);
+  flex: 0 0 auto;
   object-fit: cover;
+  display: block;
+}
+@keyframes hero-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-scroll-track { animation: none; }
 }
 .hero-scrim {
   position: absolute;
@@ -217,6 +224,120 @@ body.home .site-header.is-scrolled .brand-logo {
   max-width: 62ch;
   color: var(--ink-soft);
   font-size: 1.1rem;
+}
+
+.video-gallery-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  gap: 56px;
+  align-items: start;
+  margin-top: 32px;
+}
+
+.video-embed {
+  max-width: 320px;
+  margin: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+/* Photo gallery */
+.photo-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+  margin-top: 0;
+}
+.photo-thumb {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--cream-dark);
+}
+.photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.2s ease;
+}
+.photo-thumb:hover img,
+.photo-thumb:focus-visible img {
+  transform: scale(1.06);
+}
+.photo-thumb:focus-visible {
+  outline: 3px solid var(--gold-700);
+  outline-offset: 2px;
+}
+
+/* Lightbox */
+.photo-lightbox {
+  border: none;
+  padding: 0;
+  background: transparent;
+  max-width: 92vw;
+  max-height: 92vh;
+}
+.photo-lightbox::backdrop {
+  background: rgba(15, 15, 10, 0.88);
+}
+.photo-lightbox img {
+  display: block;
+  max-width: 92vw;
+  max-height: 92vh;
+  border-radius: 8px;
+}
+.photo-lightbox button {
+  position: fixed;
+  background: rgba(22, 22, 15, 0.55);
+  color: var(--white);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+.photo-lightbox button:hover,
+.photo-lightbox button:focus-visible {
+  background: rgba(22, 22, 15, 0.85);
+}
+.lightbox-close {
+  top: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+.lightbox-prev,
+.lightbox-next {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+  font-size: 2rem;
+  line-height: 1;
+}
+.lightbox-prev { left: 20px; }
+.lightbox-next { right: 20px; }
+
+@media (max-width: 900px) {
+  .video-gallery-grid { grid-template-columns: 1fr; gap: 40px; }
+  .video-embed { margin-left: auto; margin-right: auto; }
+}
+
+@media (max-width: 480px) {
+  .lightbox-prev, .lightbox-next { width: 40px; height: 40px; font-size: 1.5rem; }
+  .lightbox-prev { left: 8px; }
+  .lightbox-next { right: 8px; }
+  .lightbox-close { top: 8px; right: 8px; }
 }
 
 /* About */
@@ -485,6 +606,7 @@ body.home .site-header.is-scrolled .brand-logo {
 }
 
 @media (max-width: 720px) {
+  .brand-logo { height: 44px; }
   .site-nav { display: none; }
   .nav-toggle { display: flex; }
   .nav-cta { display: none; }
@@ -492,7 +614,7 @@ body.home .site-header.is-scrolled .brand-logo {
     display: flex;
     flex-direction: column;
     position: absolute;
-    top: 72px;
+    top: 100%;
     left: 0;
     right: 0;
     background: var(--cream);

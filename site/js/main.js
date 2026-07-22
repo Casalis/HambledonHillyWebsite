@@ -1,12 +1,4 @@
-// Shrink the header logo out of the hero and into the compact bar on scroll
 const header = document.querySelector('.site-header');
-if (header) {
-  const updateHeaderScrollState = () => {
-    header.classList.toggle('is-scrolled', window.scrollY > 40);
-  };
-  window.addEventListener('scroll', updateHeaderScrollState, { passive: true });
-  updateHeaderScrollState();
-}
 
 // Mobile nav toggle
 const navToggle = document.querySelector('.nav-toggle');
@@ -65,7 +57,7 @@ let finishMarker;
 let vineyardMarker;
 
 function initRouteMap() {
-  routeMap = L.map('route-map', { scrollWheelZoom: false });
+  routeMap = L.map('route-map', { scrollWheelZoom: false, gestureHandling: true });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
     attribution: '&copy; OpenStreetMap contributors',
@@ -184,10 +176,46 @@ if (document.getElementById('route-map')) {
 const locationMapEl = document.getElementById('location-map');
 if (locationMapEl && typeof ROUTES !== 'undefined') {
   const center = ROUTES['5k'].points[0];
-  const locationMap = L.map('location-map', { scrollWheelZoom: false }).setView(center, 14);
+  const locationMap = L.map('location-map', { scrollWheelZoom: false, gestureHandling: true }).setView(center, 14);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
     attribution: '&copy; OpenStreetMap contributors',
   }).addTo(locationMap);
   L.marker(center).addTo(locationMap).bindPopup('Hambledon Vineyard — Race HQ').openPopup();
+}
+
+// Photo gallery lightbox
+const galleryEl = document.getElementById('photo-gallery');
+const lightbox = document.getElementById('photo-lightbox');
+if (galleryEl && lightbox) {
+  const thumbs = Array.from(galleryEl.querySelectorAll('.photo-thumb'));
+  const lightboxImg = document.getElementById('lightbox-img');
+  let currentIndex = 0;
+
+  function showPhoto(index) {
+    currentIndex = (index + thumbs.length) % thumbs.length;
+    const img = thumbs[currentIndex].querySelector('img');
+    lightboxImg.src = img.src;
+    lightboxImg.alt = img.alt;
+  }
+
+  thumbs.forEach((thumb, index) => {
+    thumb.addEventListener('click', () => {
+      showPhoto(index);
+      lightbox.showModal();
+    });
+  });
+
+  lightbox.querySelector('.lightbox-close').addEventListener('click', () => lightbox.close());
+  lightbox.querySelector('.lightbox-prev').addEventListener('click', () => showPhoto(currentIndex - 1));
+  lightbox.querySelector('.lightbox-next').addEventListener('click', () => showPhoto(currentIndex + 1));
+
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) lightbox.close();
+  });
+
+  lightbox.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') showPhoto(currentIndex - 1);
+    if (e.key === 'ArrowRight') showPhoto(currentIndex + 1);
+  });
 }
