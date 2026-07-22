@@ -1,12 +1,4 @@
-// Shrink the header logo out of the hero and into the compact bar on scroll
 const header = document.querySelector('.site-header');
-if (header) {
-  const updateHeaderScrollState = () => {
-    header.classList.toggle('is-scrolled', window.scrollY > 40);
-  };
-  window.addEventListener('scroll', updateHeaderScrollState, { passive: true });
-  updateHeaderScrollState();
-}
 
 // Mobile nav toggle
 const navToggle = document.querySelector('.nav-toggle');
@@ -190,4 +182,40 @@ if (locationMapEl && typeof ROUTES !== 'undefined') {
     attribution: '&copy; OpenStreetMap contributors',
   }).addTo(locationMap);
   L.marker(center).addTo(locationMap).bindPopup('Hambledon Vineyard — Race HQ').openPopup();
+}
+
+// Photo gallery lightbox
+const galleryEl = document.getElementById('photo-gallery');
+const lightbox = document.getElementById('photo-lightbox');
+if (galleryEl && lightbox) {
+  const thumbs = Array.from(galleryEl.querySelectorAll('.photo-thumb'));
+  const lightboxImg = document.getElementById('lightbox-img');
+  let currentIndex = 0;
+
+  function showPhoto(index) {
+    currentIndex = (index + thumbs.length) % thumbs.length;
+    const img = thumbs[currentIndex].querySelector('img');
+    lightboxImg.src = img.src;
+    lightboxImg.alt = img.alt;
+  }
+
+  thumbs.forEach((thumb, index) => {
+    thumb.addEventListener('click', () => {
+      showPhoto(index);
+      lightbox.showModal();
+    });
+  });
+
+  lightbox.querySelector('.lightbox-close').addEventListener('click', () => lightbox.close());
+  lightbox.querySelector('.lightbox-prev').addEventListener('click', () => showPhoto(currentIndex - 1));
+  lightbox.querySelector('.lightbox-next').addEventListener('click', () => showPhoto(currentIndex + 1));
+
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) lightbox.close();
+  });
+
+  lightbox.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') showPhoto(currentIndex - 1);
+    if (e.key === 'ArrowRight') showPhoto(currentIndex + 1);
+  });
 }
