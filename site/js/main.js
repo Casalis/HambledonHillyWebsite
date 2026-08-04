@@ -44,7 +44,7 @@ const COURSE_INFO = {
   '20k': {
     entryFee: '£20.00',
     startTime: '9.30am',
-    description: 'A self-sufficient, self-navigated trail run for the trail purist. Course markings are sparse and marshals are only at busy road crossings. A mandatory kit list applies, including the route on a watch or phone, water and weather-appropriate gear. Trophies for first, second and third place men and women.',
+    description: 'A self-sufficient, self-navigated trail run for the trail purist. Runners must rely on their own navigation. The route will be available to download from the website. The downloaded route on a device, your mobile phone and 1 liter of water will be part of the mandatory kit. Water will be available from a Southdowns water tap at the Meon Springs.',
   },
 };
 
