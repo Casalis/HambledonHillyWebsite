@@ -124,6 +124,7 @@
           and dining. Bookings should be made well in advance at
           <a href="https://www.hambledonvineyard.co.uk" target="_blank" rel="noopener">hambledonvineyard.co.uk</a>.
         </p>
+        <a class="btn btn-primary" href="#location">Getting There &rarr;</a>
       </div>
       <div class="about-facts">
         <div class="fact-card">
@@ -210,7 +211,10 @@
       </div>
 
       <div class="route-panel">
-        <div id="route-map" class="route-map" role="img" aria-label="Map of the selected route"></div>
+        <div class="route-map-col">
+          <div id="route-map" class="route-map" role="img" aria-label="Map of the selected route"></div>
+          <a id="gpx-download" class="route-gpx-link" href="#" download>&#8681; Download GPX</a>
+        </div>
         <div class="route-stats" id="route-stats">
           <!-- populated by js -->
         </div>
@@ -268,15 +272,24 @@
       <div class="location-copy">
         <h2>Getting There</h2>
         <p>
-          Race HQ is based at Hambledon Vineyard, PO7 4RY (what3words:
-          <strong>rezoning.pulsing.swift</strong>), home to England's oldest commercial
+          Race HQ is based at Hambledon Vineyard, home to England's oldest commercial
           vineyard, in the heart of the Hampshire countryside. Race HQ itself is in the
           big white marquee behind the Vineyard Restaurant.
         </p>
+        <address class="venue-address">
+          Hambledon Vineyard<br>
+          Hambledon<br>
+          Hampshire<br>
+          PO7 4RY
+        </address>
+        <p class="what3words">what3words: <strong>rezoning.pulsing.swift</strong></p>
         <p>
           Parking is available on the estate and marshals will direct you on arrival.
         </p>
-        <a class="btn btn-primary" href="https://www.hambledonvineyard.co.uk" target="_blank" rel="noopener">Visit Hambledon Vineyard</a>
+        <div class="location-actions">
+          <a class="btn btn-primary" href="https://www.google.com/maps/search/?api=1&query=Hambledon+Vineyard%2C+Hambledon%2C+Hampshire%2C+PO7+4RY" target="_blank" rel="noopener">Open in Google Maps</a>
+          <a class="btn btn-ghost-dark" href="https://www.hambledonvineyard.co.uk" target="_blank" rel="noopener">Visit Hambledon Vineyard</a>
+        </div>
       </div>
       <div id="location-map" class="location-map" role="img" aria-label="Map of Hambledon Vineyard"></div>
     </div>

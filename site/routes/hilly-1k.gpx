@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="Mapometer.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+<metadata>
+<name><![CDATA[Hilly 1km]]></name>
+<desc><![CDATA[]]></desc>
+<bounds minlat="50.93370" minlon="-1.08461" maxlat="50.93790" maxlon="-1.08011" />
+</metadata>
+<rte>
+
+<rtept lon="-1.08035" lat="50.93790">
+<ele>105.2</ele>
+</rtept>
+<rtept lon="-1.08071" lat="50.93781">
+<ele>104.7</ele>
+</rtept>
+<rtept lon="-1.08075" lat="50.93780">
+<ele>104.7</ele>
+</rtept>
+<rtept lon="-1.08218" lat="50.93724">
+<ele>100.7</ele>
+</rtept>
+<rtept lon="-1.08461" lat="50.93648">
+<ele>89.9</ele>
+</rtept>
+<rtept lon="-1.08271" lat="50.93474">
+<ele>84.1</ele>
+</rtept>
+<rtept lon="-1.08215" lat="50.93430">
+<ele>80.0</ele>
+</rtept>
+<rtept lon="-1.08177" lat="50.93397">
+<ele>78.5</ele>
+</rtept>
+<rtept lon="-1.08127" lat="50.93416">
+<ele>77.0</ele>
+</rtept>
+<rtept lon="-1.08080" lat="50.93370">
+<ele>75.8</ele>
+</rtept>
+<rtept lon="-1.08079" lat="50.93378">
+<ele>76.5</ele>
+</rtept>
+<rtept lon="-1.08081" lat="50.93418">
+<ele>79.9</ele>
+</rtept>
+<rtept lon="-1.08087" lat="50.93448">
+<ele>82.6</ele>
+</rtept>
+<rtept lon="-1.08104" lat="50.93507">
+<ele>88.0</ele>
+</rtept>
+<rtept lon="-1.08096" lat="50.93580">
+<ele>94.0</ele>
+</rtept>
+<rtept lon="-1.08086" lat="50.93646">
+<ele>98.9</ele>
+</rtept>
+<rtept lon="-1.08083" lat="50.93686">
+<ele>101.4</ele>
+</rtept>
+<rtept lon="-1.08073" lat="50.93744">
+<ele>104.6</ele>
+</rtept>
+<rtept lon="-1.08068" lat="50.93778">
+<ele>104.8</ele>
+</rtept>
+<rtept lon="-1.08066" lat="50.93780">
+<ele>104.8</ele>
+</rtept>
+<rtept lon="-1.08011" lat="50.93787">
+<ele>104.8</ele>
+</rtept>
+
+</rte>
+</gpx>
