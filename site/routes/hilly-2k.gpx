@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="Mapometer.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+<metadata>
+<name><![CDATA[Hilly 2km]]></name>
+<desc><![CDATA[]]></desc>
+<bounds minlat="50.93734" minlon="-1.08021" maxlat="50.94295" maxlon="-1.07201" />
+</metadata>
+<rte>
+
+<rtept lon="-1.08021" lat="50.93787">
+<ele>104.9</ele>
+</rtept>
+<rtept lon="-1.07940" lat="50.93773">
+<ele>102.4</ele>
+</rtept>
+<rtept lon="-1.07890" lat="50.93800">
+<ele>102.6</ele>
+</rtept>
+<rtept lon="-1.07753" lat="50.93841">
+<ele>97.4</ele>
+</rtept>
+<rtept lon="-1.07611" lat="50.93933">
+<ele>88.1</ele>
+</rtept>
+<rtept lon="-1.07470" lat="50.93910">
+<ele>72.2</ele>
+</rtept>
+<rtept lon="-1.07523" lat="50.93854">
+<ele>76.5</ele>
+</rtept>
+<rtept lon="-1.07440" lat="50.93804">
+<ele>69.6</ele>
+</rtept>
+<rtept lon="-1.07356" lat="50.93779">
+<ele>65.2</ele>
+</rtept>
+<rtept lon="-1.07285" lat="50.93760">
+<ele>63.1</ele>
+</rtept>
+<rtept lon="-1.07201" lat="50.93734">
+<ele>61.8</ele>
+</rtept>
+<rtept lon="-1.07207" lat="50.93735">
+<ele>61.9</ele>
+</rtept>
+<rtept lon="-1.07226" lat="50.93789">
+<ele>62.8</ele>
+</rtept>
+<rtept lon="-1.07261" lat="50.93903">
+<ele>65.5</ele>
+</rtept>
+<rtept lon="-1.07293" lat="50.94015">
+<ele>69.7</ele>
+</rtept>
+<rtept lon="-1.07304" lat="50.94055">
+<ele>71.1</ele>
+</rtept>
+<rtept lon="-1.07307" lat="50.94065">
+<ele>71.6</ele>
+</rtept>
+<rtept lon="-1.07313" lat="50.94085">
+<ele>72.2</ele>
+</rtept>
+<rtept lon="-1.07320" lat="50.94109">
+<ele>72.5</ele>
+</rtept>
+<rtept lon="-1.07329" lat="50.94141">
+<ele>72.2</ele>
+</rtept>
+<rtept lon="-1.07341" lat="50.94179">
+<ele>71.2</ele>
+</rtept>
+<rtept lon="-1.07359" lat="50.94228">
+<ele>70.5</ele>
+</rtept>
+<rtept lon="-1.07364" lat="50.94247">
+<ele>70.4</ele>
+</rtept>
+<rtept lon="-1.07374" lat="50.94269">
+<ele>71.3</ele>
+</rtept>
+<rtept lon="-1.07472" lat="50.94295">
+<ele>73.4</ele>
+</rtept>
+<rtept lon="-1.07461" lat="50.94192">
+<ele>74.6</ele>
+</rtept>
+<rtept lon="-1.07633" lat="50.94226">
+<ele>88.8</ele>
+</rtept>
+<rtept lon="-1.07607" lat="50.93949">
+<ele>91.1</ele>
+</rtept>
+<rtept lon="-1.07755" lat="50.93852">
+<ele>99.6</ele>
+</rtept>
+<rtept lon="-1.07884" lat="50.93808">
+<ele>103.4</ele>
+</rtept>
+<rtept lon="-1.07937" lat="50.93788">
+<ele>104.7</ele>
+</rtept>
+<rtept lon="-1.07985" lat="50.93791">
+<ele>104.7</ele>
+</rtept>
+
+</rte>
+</gpx>

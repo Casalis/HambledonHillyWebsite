@@ -16,12 +16,10 @@ if (navToggle) {
 }
 
 // Route map
-const ROUTE_COLORS = { '20k': '#16160f', '10k': '#a9840f', '5k': '#e0ba1a' };
+const ROUTE_COLORS = { '20k': '#16160f', '10k': '#a9840f', '5k': '#e0ba1a', '2k': '#6a8f4f', '1k': '#3c6e9c' };
 
 // Race-day facts from the official event information (entry fees, start times,
-// course descriptions). The 1k and 2k children's races run on footpaths within
-// the vineyard estate and aren't published as GPS routes, so they render as a
-// course description rather than a map line.
+// course descriptions).
 const COURSE_INFO = {
   '1k': {
     entryFee: '£5.00',
@@ -46,7 +44,7 @@ const COURSE_INFO = {
   '20k': {
     entryFee: '£20.00',
     startTime: '9.30am',
-    description: 'A self-sufficient, self-navigated trail run for the trail purist. Course markings are sparse and marshals are only at busy road crossings. A mandatory kit list applies, including the route on a watch or phone, water and weather-appropriate gear. Trophies for first, second and third place men and women.',
+    description: 'A self-sufficient, self-navigated trail run for the trail purist. Runners must rely on their own navigation. The route will be available to download from the website. The downloaded route on a device, your mobile phone and 1 liter of water will be part of the mandatory kit. Water will be available from a Southdowns water tap at the Meon Springs.',
   },
 };
 
@@ -55,6 +53,41 @@ let routeLine;
 let startMarker;
 let finishMarker;
 let vineyardMarker;
+let activeRouteKey;
+
+function buildGpx(key) {
+  const data = ROUTES[key];
+  const points = data.points
+    .map(([lat, lon]) => `      <trkpt lat="${lat}" lon="${lon}"></trkpt>`)
+    .join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="The Hambledon Hilly" xmlns="http://www.topografix.com/GPX/1/1">
+  <trk>
+    <name>The Hambledon Hilly - ${key.toUpperCase()}</name>
+    <trkseg>
+${points}
+    </trkseg>
+  </trk>
+</gpx>`;
+}
+
+const gpxLink = document.getElementById('gpx-download');
+if (gpxLink) {
+  gpxLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (!ROUTES[activeRouteKey]) return;
+    const gpx = buildGpx(activeRouteKey);
+    const blob = new Blob([gpx], { type: 'application/gpx+xml' });
+    const url = URL.createObjectURL(blob);
+    const tempLink = document.createElement('a');
+    tempLink.href = url;
+    tempLink.download = `hambledon-hilly-${activeRouteKey}.gpx`;
+    document.body.appendChild(tempLink);
+    tempLink.click();
+    tempLink.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+}
 
 function initRouteMap() {
   routeMap = L.map('route-map', { scrollWheelZoom: false, gestureHandling: true });
@@ -75,6 +108,12 @@ function renderRoute(key) {
   const data = ROUTES[key];
   const info = COURSE_INFO[key];
   if (!info) return;
+
+  activeRouteKey = key;
+  if (gpxLink) {
+    gpxLink.classList.toggle('is-disabled', !data);
+    gpxLink.setAttribute('aria-disabled', String(!data));
+  }
 
   if (!routeMap) initRouteMap();
   clearRouteLayers();

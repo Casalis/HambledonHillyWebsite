@@ -404,12 +404,39 @@ a { color: var(--gold-700); }
   gap: 24px;
   align-items: stretch;
 }
+.route-map-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 .route-map {
   height: 460px;
   border-radius: var(--radius);
   box-shadow: var(--shadow-md);
   overflow: hidden;
   background: var(--white);
+}
+.route-gpx-link {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  padding: 0.6em 1.4em;
+  border-radius: 999px;
+  border: 2px solid var(--dark-700);
+  color: var(--dark-700);
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.route-gpx-link:hover {
+  background: var(--dark-700);
+  color: var(--white);
+}
+.route-gpx-link.is-disabled {
+  opacity: 0.4;
+  pointer-events: none;
 }
 .route-stats {
   display: flex;
@@ -547,6 +574,38 @@ a { color: var(--gold-700); }
   border-radius: var(--radius);
   box-shadow: var(--shadow-md);
   overflow: hidden;
+}
+.venue-address {
+  font-style: normal;
+  font-weight: 700;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  color: var(--dark-900);
+  background: var(--white);
+  border-left: 4px solid var(--gold-700);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+  margin: 20px 0;
+}
+.what3words {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+.location-actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 1.25em;
+}
+.btn-ghost-dark {
+  background: transparent;
+  color: var(--dark-900);
+  border-color: var(--dark-700);
+}
+.btn-ghost-dark:hover {
+  background: var(--dark-700);
+  color: var(--white);
 }
 
 /* CTA banner */
