@@ -15,6 +15,47 @@ if (navToggle) {
   });
 }
 
+// Cookie consent
+const COOKIE_CONSENT_KEY = 'hh-cookie-consent';
+const cookieBanner = document.getElementById('cookie-banner');
+const videoGate = document.getElementById('video-consent-gate');
+
+function loadVideoEmbed() {
+  if (!videoGate) return;
+  const embed = document.getElementById('video-embed');
+  const notice = document.getElementById('video-consent-notice');
+  if (!embed || embed.childElementCount > 0) return;
+  const videoId = videoGate.dataset.videoId;
+  embed.innerHTML = `<div style="padding:177.78% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/${videoId}?badge=0&autopause=0&player_id=0&app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Hambledon Hilly 2025"></iframe></div>`;
+  embed.hidden = false;
+  if (notice) notice.hidden = true;
+}
+
+function refreshVideoGate() {
+  if (!videoGate) return;
+  if (localStorage.getItem(COOKIE_CONSENT_KEY) === 'accepted') {
+    loadVideoEmbed();
+  }
+}
+
+function setCookieConsent(choice) {
+  localStorage.setItem(COOKIE_CONSENT_KEY, choice);
+  if (cookieBanner) cookieBanner.hidden = true;
+  refreshVideoGate();
+}
+
+document.getElementById('cookie-accept')?.addEventListener('click', () => setCookieConsent('accepted'));
+document.getElementById('cookie-reject')?.addEventListener('click', () => setCookieConsent('rejected'));
+document.getElementById('video-consent-accept')?.addEventListener('click', () => setCookieConsent('accepted'));
+document.querySelectorAll('.cookie-preferences-btn').forEach(btn => {
+  btn.addEventListener('click', () => { if (cookieBanner) cookieBanner.hidden = false; });
+});
+
+if (cookieBanner && !localStorage.getItem(COOKIE_CONSENT_KEY)) {
+  cookieBanner.hidden = false;
+}
+refreshVideoGate();
+
 // Route map
 const ROUTE_COLORS = { '20k': '#16160f', '10k': '#a9840f', '5k': '#e0ba1a', '2k': '#6a8f4f', '1k': '#3c6e9c' };
 
@@ -44,7 +85,7 @@ const COURSE_INFO = {
   '20k': {
     entryFee: '£20.00',
     startTime: '9.30am',
-    description: 'A self-sufficient, self-navigated trail run for the trail purist. Runners must rely on their own navigation. The route will be available to download from the website. The downloaded route on a device, your mobile phone and 1 liter of water will be part of the mandatory kit. Water will be available from a Southdowns water tap at the Meon Springs.',
+    description: 'A self-sufficient, self-navigated trail run for the trail purist. Runners must rely on their own navigation. The downloaded route on a device, your mobile phone and 1 liter of water will be part of the mandatory kit. Water will be available from a Southdowns water tap at the Meon Springs.',
   },
 };
 
