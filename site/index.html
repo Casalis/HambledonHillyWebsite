@@ -13,6 +13,20 @@
 </head>
 <body class="home">
 
+<div id="cookie-banner" class="cookie-banner" role="dialog" aria-label="Cookie consent" hidden>
+  <div class="cookie-banner-inner">
+    <p>
+      We use a small number of cookies to run this site. Necessary cookies keep it working;
+      the embedded 2025 Highlights video is provided by Vimeo, which sets its own cookies once
+      you choose to load it. You can change your choice any time via "Cookie Preferences" in the footer.
+    </p>
+    <div class="cookie-banner-actions">
+      <button type="button" class="btn btn-ghost" id="cookie-reject">Necessary only</button>
+      <button type="button" class="btn btn-primary" id="cookie-accept">Accept all</button>
+    </div>
+  </div>
+</div>
+
 <header class="site-header">
   <div class="wrap header-inner">
     <a class="brand" href="#top">
@@ -158,8 +172,12 @@
     </div>
     <div class="wrap video-gallery-grid">
       <div class="video-panel">
-        <div class="video-embed">
-          <div style="padding:177.78% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1141648150?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Hambledon Hilly 2025"></iframe></div>
+        <div id="video-consent-gate" data-video-id="1141648150">
+          <div class="video-embed" id="video-embed" hidden></div>
+          <div class="video-consent-notice" id="video-consent-notice">
+            <p>This video is hosted by Vimeo, which sets cookies when played.</p>
+            <button type="button" class="btn btn-primary" id="video-consent-accept">Accept cookies &amp; watch</button>
+          </div>
         </div>
       </div>
       <div class="gallery-panel">
@@ -312,6 +330,7 @@
       <a href="race-info.html">Race Info</a>
       <a href="our-story.html">Our Story</a>
       <a href="https://racesignup.co.uk/hambledon-hilly" target="_blank" rel="noopener">Sign Up</a>
+      <button type="button" class="footer-cookie-btn cookie-preferences-btn">Cookie Preferences</button>
     </nav>
   </div>
 </footer>
