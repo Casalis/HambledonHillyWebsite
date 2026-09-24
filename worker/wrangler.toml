@@ -1,0 +1,13 @@
+name = "hambledonhilly-photos"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+# Served at photos.hambledonhilly.com (Cloudflare creates the DNS record on deploy).
+routes = [
+  { pattern = "photos.hambledonhilly.com", custom_domain = true }
+]
+
+[[r2_buckets]]
+binding = "PHOTOS"
+# The R2 bucket holding the album photos (Cloudflare dashboard -> R2).
+bucket_name = "hambledon-hilly-photos-26"

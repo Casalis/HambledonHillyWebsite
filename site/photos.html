@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photos | The Hambledon Hilly</title>
+<meta name="description" content="Photo albums from the Hambledon Hilly races at Hambledon Vineyard.">
+<link rel="icon" type="image/svg+xml" href="images/hambledonhilly-logo.svg">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="cookie-banner" class="cookie-banner" role="dialog" aria-label="Cookie consent" hidden>
+  <div class="cookie-banner-inner">
+    <p>
+      We use a small number of cookies to run this site. Necessary cookies keep it working;
+      the embedded 2025 Highlights video on the home page is provided by Vimeo, which sets its own
+      cookies once you choose to load it. You can change your choice any time via "Cookie Preferences" in the footer.
+    </p>
+    <div class="cookie-banner-actions">
+      <button type="button" class="btn btn-ghost" id="cookie-reject">Necessary only</button>
+      <button type="button" class="btn btn-primary" id="cookie-accept">Accept all</button>
+    </div>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="index.html#top">
+      <img class="brand-logo" src="images/hambledonhilly-logo.svg" alt="The Hambledon Hilly">
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="index.html#about">About</a>
+      <a href="index.html#routes">Routes</a>
+      <a href="race-info.html">Race Info</a>
+      <a href="index.html#day">On the Day</a>
+      <a href="index.html#sponsors">Sponsors</a>
+      <a href="index.html#location">Location</a>
+      <a href="our-story.html">Our Story</a>
+      <a href="photos.html">Photos</a>
+    </nav>
+    <a class="btn btn-primary nav-cta" href="https://sites.chronotrack.com/event/94311/results?raceId=250518&divisionId=2814686" target="_blank" rel="noopener">2026 Results</a>
+    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="section">
+    <div class="wrap">
+      <h1>Photo Album</h1>
+      <p class="section-lede">Runners, marshals and supporters from the Hambledon Hilly. Tap any photo to see it full size.</p>
+
+      <div class="route-tabs" id="album-tabs" role="tablist" aria-label="Albums" hidden></div>
+
+      <div class="photo-gallery album-grid" id="photo-album"></div>
+      <p class="album-status" id="album-status" role="status" hidden></p>
+      <div id="album-sentinel" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <dialog id="album-lightbox" class="photo-lightbox">
+    <button class="lightbox-close" type="button" aria-label="Close">&times;</button>
+    <button class="lightbox-prev" type="button" aria-label="Previous photo">&lsaquo;</button>
+    <img id="album-lightbox-img" src="" alt="">
+    <button class="lightbox-next" type="button" aria-label="Next photo">&rsaquo;</button>
+  </dialog>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <img class="footer-logo" src="images/hambledonhilly-logo.svg" alt="The Hambledon Hilly">
+    <p>&copy; 2026 The Hambledon Hilly. Held at Hambledon Vineyard in aid of Brain Tumour Research and Hambledon Primary School.</p>
+    <nav class="footer-nav" aria-label="Footer">
+      <a href="index.html#top">Home</a>
+      <a href="race-info.html">Race Info</a>
+      <a href="photos.html">Photos</a>
+      <a href="https://sites.chronotrack.com/event/94311/results?raceId=250518&divisionId=2814686" target="_blank" rel="noopener">2026 Results</a>
+      <button type="button" class="footer-cookie-btn cookie-preferences-btn">Cookie Preferences</button>
+    </nav>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+<script src="js/photos.js"></script>
+</body>
+</html>

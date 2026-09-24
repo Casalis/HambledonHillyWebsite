@@ -275,6 +275,32 @@ a { color: var(--gold-700); }
   outline-offset: 2px;
 }
 
+/* Photo album page */
+.album-grid {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 32px;
+}
+.album-grid .photo-thumb img {
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.2s ease;
+}
+.album-grid .photo-thumb.is-loaded img {
+  opacity: 1;
+}
+.album-status {
+  text-align: center;
+  color: var(--ink-soft);
+  margin: 32px 0 0;
+}
+#album-sentinel {
+  height: 1px;
+}
+
+@media (max-width: 480px) {
+  .album-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+}
+
 /* Lightbox */
 .photo-lightbox {
   border: none;
