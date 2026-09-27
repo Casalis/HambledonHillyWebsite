@@ -1,6 +1,7 @@
 /OldWebsite
 /routes
 /NewImages
+/Photos
 EventInfo.md
 .claude/settings.local.json
 worker/.wrangler

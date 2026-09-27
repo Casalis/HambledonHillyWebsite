@@ -2,6 +2,7 @@
 //
 // Reads from the R2 bucket bound as PHOTOS (see wrangler.toml) and exposes:
 //   GET /api/albums                      -> top-level "folders" in the bucket, e.g. ["2025/", "2026/"]
+//   GET /api/albums?parent=2025/         -> folders inside one album, e.g. ["2025/20km/", "2025/10&5km/"]
 //   GET /api/photos?album=2025/&cursor=  -> one page of photos in that folder, plus a cursor for the next page
 //   GET /photo/<key>                     -> the image itself, streamed straight from R2
 //
@@ -51,12 +52,14 @@ function notFound() {
   return new Response('Not found', { status: 404, headers: CORS_HEADERS });
 }
 
-async function listAlbums(env) {
+async function listAlbums(env, url) {
+  // With ?parent=2025/ this lists that album's sub-albums (e.g. "2025/20km/").
+  const parent = url.searchParams.get('parent') || '';
   const albums = [];
   let cursor;
   do {
-    const page = await env.PHOTOS.list({ delimiter: '/', cursor });
-    albums.push(...page.delimitedPrefixes.filter(prefix => prefix !== THUMBS_FOLDER));
+    const page = await env.PHOTOS.list({ prefix: parent, delimiter: '/', cursor });
+    albums.push(...page.delimitedPrefixes.filter(prefix => prefix !== parent + THUMBS_FOLDER));
     cursor = page.truncated ? page.cursor : undefined;
   } while (cursor);
   return json({ albums });
@@ -132,7 +135,7 @@ export default {
 
     const url = new URL(request.url);
 
-    if (url.pathname === '/api/albums') return listAlbums(env);
+    if (url.pathname === '/api/albums') return listAlbums(env, url);
     if (url.pathname === '/api/photos') return listPhotos(env, url);
     if (url.pathname.startsWith('/photo/')) return servePhoto(request, env, ctx, url);
 

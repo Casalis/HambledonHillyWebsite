@@ -9,6 +9,7 @@ const PHOTO_API = IS_LOCAL
 
 const albumGrid = document.getElementById('photo-album');
 const albumTabs = document.getElementById('album-tabs');
+const albumSubtabs = document.getElementById('album-subtabs');
 const albumStatus = document.getElementById('album-status');
 const albumSentinel = document.getElementById('album-sentinel');
 const albumLightbox = document.getElementById('album-lightbox');
@@ -21,6 +22,8 @@ let hasMore = true;
 let isLoading = false;
 // Incremented on album switch so responses for a previous album are ignored.
 let loadGeneration = 0;
+// Same idea for year switches, which first look up the year's distance folders.
+let yearGeneration = 0;
 let lightboxIndex = 0;
 
 function setStatus(message) {
@@ -28,8 +31,9 @@ function setStatus(message) {
   albumStatus.hidden = !message;
 }
 
+// "2025/10&5km/" -> "10&5km" (the folder's own name, for tab labels).
 function albumLabel(prefix) {
-  return prefix.replace(/\/$/, '').replace(/[-_]/g, ' ');
+  return prefix.replace(/\/$/, '').split('/').pop().replace(/[-_]/g, ' ');
 }
 
 function addPhoto(photo) {
@@ -46,7 +50,7 @@ function addPhoto(photo) {
   img.addEventListener('error', () => {
     if (img.src !== PHOTO_API + photo.src) img.src = PHOTO_API + photo.src;
   });
-  img.alt = `Hambledon Hilly ${albumLabel(currentAlbum)} photo ${index + 1}`.replace(/\s+/g, ' ');
+  img.alt = `Hambledon Hilly ${currentAlbum.split('/').join(' ')} photo ${index + 1}`.replace(/\s+/g, ' ');
   img.loading = 'lazy';
   img.decoding = 'async';
   img.addEventListener('load', () => button.classList.add('is-loaded'), { once: true });
@@ -102,6 +106,42 @@ const sentinelObserver = new IntersectionObserver(entries => {
   if (entries.some(entry => entry.isIntersecting)) loadNextPage();
 }, { rootMargin: '800px 0px' });
 
+function setActiveTab(container, prefix) {
+  container.querySelectorAll('.route-tab').forEach(tab => {
+    const isActive = tab.dataset.album === prefix;
+    tab.classList.toggle('is-active', isActive);
+    tab.setAttribute('aria-selected', String(isActive));
+  });
+}
+
+function renderTabs(container, prefixes, onSelect) {
+  container.innerHTML = '';
+  prefixes.forEach(prefix => {
+    const tab = document.createElement('button');
+    tab.type = 'button';
+    tab.className = 'route-tab';
+    tab.setAttribute('role', 'tab');
+    tab.dataset.album = prefix;
+    tab.textContent = albumLabel(prefix);
+    tab.addEventListener('click', () => onSelect(prefix));
+    container.appendChild(tab);
+  });
+}
+
+// Lists the folders inside `parent` ('' for the top level), sorted numerically
+// descending: newest year first, then 20km, 10&5km, 1&2km.
+async function fetchFolders(parent) {
+  let folders = [];
+  try {
+    const params = new URLSearchParams({ parent });
+    const res = await fetch(`${PHOTO_API}/api/albums?${params}`);
+    if (res.ok) folders = (await res.json()).albums;
+  } catch (err) {
+    console.error('Photo album:', err);
+  }
+  return folders.sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+}
+
 function selectAlbum(prefix) {
   loadGeneration += 1;
   currentAlbum = prefix;
@@ -110,44 +150,37 @@ function selectAlbum(prefix) {
   hasMore = true;
   isLoading = false;
   albumGrid.innerHTML = '';
-
-  albumTabs.querySelectorAll('.route-tab').forEach(tab => {
-    const isActive = tab.dataset.album === prefix;
-    tab.classList.toggle('is-active', isActive);
-    tab.setAttribute('aria-selected', String(isActive));
-  });
+  setActiveTab(albumSubtabs, prefix);
 
   sentinelObserver.unobserve(albumSentinel);
   sentinelObserver.observe(albumSentinel);
 }
 
+// Picks a year; if it is split into distance folders, shows those as a second row of tabs.
+async function selectYear(prefix) {
+  const generation = ++yearGeneration;
+  loadGeneration += 1;
+  setActiveTab(albumTabs, prefix);
+  albumGrid.innerHTML = '';
+  setStatus('Loading photos…');
+
+  const distances = await fetchFolders(prefix);
+  if (generation !== yearGeneration) return;
+
+  renderTabs(albumSubtabs, distances, selectAlbum);
+  albumSubtabs.hidden = distances.length === 0;
+  selectAlbum(distances[0] || prefix);
+}
+
 async function initAlbums() {
-  let albums = [];
-  try {
-    const res = await fetch(`${PHOTO_API}/api/albums`);
-    if (res.ok) albums = (await res.json()).albums;
-  } catch (err) {
-    console.error('Photo album:', err);
-  }
+  const years = await fetchFolders('');
 
-  // Newest first, assuming albums are named by year (e.g. "2025/", "2026/").
-  albums.sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
-
-  if (albums.length > 1) {
-    albums.forEach(prefix => {
-      const tab = document.createElement('button');
-      tab.type = 'button';
-      tab.className = 'route-tab';
-      tab.setAttribute('role', 'tab');
-      tab.dataset.album = prefix;
-      tab.textContent = albumLabel(prefix);
-      tab.addEventListener('click', () => selectAlbum(prefix));
-      albumTabs.appendChild(tab);
-    });
+  if (years.length > 1) {
+    renderTabs(albumTabs, years, selectYear);
     albumTabs.hidden = false;
   }
 
-  selectAlbum(albums[0] || '');
+  selectYear(years[0] || '');
 }
 
 // Lightbox

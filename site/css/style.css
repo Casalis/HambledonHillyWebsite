@@ -288,6 +288,14 @@ a { color: var(--gold-700); }
 .album-grid .photo-thumb.is-loaded img {
   opacity: 1;
 }
+.album-subtabs {
+  margin-top: -8px;
+  gap: 8px;
+}
+.album-subtabs .route-tab {
+  padding: 0.45em 1.3em;
+  font-size: 0.9rem;
+}
 .album-status {
   text-align: center;
   color: var(--ink-soft);
