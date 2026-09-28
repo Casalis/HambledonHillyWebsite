@@ -1,11 +1,5 @@
 // Photo album: streams photos from the R2 bucket via the hambledonhilly-photos Worker (see /worker).
-
-// The deployed Worker's URL (no trailing slash). When the site is served
-// locally, the local Worker from `npx wrangler dev` (port 8787) is used instead.
-const IS_LOCAL = ['localhost', '127.0.0.1'].includes(location.hostname);
-const PHOTO_API = IS_LOCAL
-  ? 'http://localhost:8787'
-  : 'https://photos.hambledonhilly.com';
+// PHOTO_API is defined in main.js, which is loaded first.
 
 const albumGrid = document.getElementById('photo-album');
 const albumTabs = document.getElementById('album-tabs');
