@@ -11,6 +11,9 @@ the script writes:
 Upload the contents of the output folder to the root of the R2 bucket, keeping the
 folder structure. Photos already processed are skipped, so it is safe to re-run.
 
+For the home page carousel (smaller photos, no thumbnails):
+    python tools/resize_photos.py <input_folder> site/images/carousel --size 1200 --no-thumbs
+
 Requires Pillow:  pip install Pillow
 """
 
@@ -39,8 +42,8 @@ def is_up_to_date(source, dest):
     return dest.exists() and dest.stat().st_mtime >= source.stat().st_mtime
 
 
-def process_photo(source, full_dest, thumb_dest):
-    if is_up_to_date(source, full_dest) and is_up_to_date(source, thumb_dest):
+def process_photo(source, full_dest, thumb_dest, full_size):
+    if is_up_to_date(source, full_dest) and (thumb_dest is None or is_up_to_date(source, thumb_dest)):
         return False
 
     with Image.open(source) as image:
@@ -48,8 +51,9 @@ def process_photo(source, full_dest, thumb_dest):
         image = ImageOps.exif_transpose(image)
         if image.mode != "RGB":
             image = image.convert("RGB")
-        save_resized(image, FULL_SIZE, FULL_QUALITY, full_dest)
-        save_resized(image, THUMB_SIZE, THUMB_QUALITY, thumb_dest)
+        save_resized(image, full_size, FULL_QUALITY, full_dest)
+        if thumb_dest is not None:
+            save_resized(image, THUMB_SIZE, THUMB_QUALITY, thumb_dest)
     return True
 
 
@@ -57,6 +61,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("input", type=Path, help="folder of original photos (sub-folders become albums)")
     parser.add_argument("output", type=Path, help="folder to write the resized photos to")
+    parser.add_argument("--size", type=int, default=FULL_SIZE,
+                        help=f"longest side of the resized photos in pixels (default {FULL_SIZE})")
+    parser.add_argument("--no-thumbs", action="store_true",
+                        help="don't create thumbnails (e.g. for the home page carousel)")
     args = parser.parse_args()
 
     if not args.input.is_dir():
@@ -73,10 +81,10 @@ def main():
     for source in sources:
         relative = source.relative_to(args.input).with_suffix(".jpg")
         full_dest = args.output / relative
-        thumb_dest = args.output / relative.parent / "thumbs" / relative.name
+        thumb_dest = None if args.no_thumbs else args.output / relative.parent / "thumbs" / relative.name
 
         try:
-            if process_photo(source, full_dest, thumb_dest):
+            if process_photo(source, full_dest, thumb_dest, args.size):
                 processed += 1
                 print(f"  {relative}")
             else:
