@@ -3,8 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Pre-race home page, kept for next year: copy it over index.html once the 2027 event is announced (and remove this noindex line). -->
+<meta name="robots" content="noindex">
 <title>The Hambledon Hilly | Trail Run at Hambledon Vineyard</title>
-<meta name="description" content="The 2026 Hambledon Hilly race report: over 320 runners, new routes and a new timing system at Hambledon Vineyard on 19 September 2026. Results and photos.">
+<meta name="description" content="The Hambledon Hilly returns to Hambledon Vineyard on 19 September 2026. Choose from 1k, 2k, 5k, 10k and Trail 20k routes, then enjoy food and drink at race HQ.">
 <link rel="icon" type="image/svg+xml" href="images/hambledonhilly-logo.svg">
 <link rel="preconnect" href="https://unpkg.com">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
@@ -33,11 +35,13 @@
       <img class="brand-logo" src="images/hambledonhilly-logo.svg" alt="The Hambledon Hilly">
     </a>
     <nav class="site-nav" aria-label="Primary">
-      <a href="#report">Race Report</a>
+      <a href="#about">About</a>
+      <a href="#routes">Routes</a>
+      <a href="race-info.html">Race Info</a>
+      <a href="#day">On the Day</a>
       <a href="#sponsors">Sponsors</a>
       <a href="#location">Location</a>
       <a href="our-story.html">Our Story</a>
-      <a href="race-info.html">Race Info</a>
       <a href="photos.html">Photos</a>
     </nav>
     <a class="btn btn-primary nav-cta" href="https://sites.chronotrack.com/event/94311/results?raceId=250518&divisionId=2814686" target="_blank" rel="noopener">2026 Results</a>
@@ -96,6 +100,12 @@
     <div class="wrap hero-content">
       <p class="hero-eyebrow">Saturday 19 September 2026 &middot; Hambledon Vineyard</p>
       <h1>Run for the hills.<br>Eat and drink at the Vineyard.</h1>
+      <p class="hero-lede">
+        A scenic trail run through England's oldest commercial vineyard, followed by
+        an afternoon of food and drink at race HQ. Choose your distance &mdash; from a
+        1k or 2k family fun run to the 5k, 10k or self-navigated Trail 20k &mdash;
+        and join us for a brilliant day out.
+      </p>
       <div class="hero-actions">
         <a class="btn btn-primary btn-lg" href="https://sites.chronotrack.com/event/94311/results?raceId=250518&divisionId=2814686" target="_blank" rel="noopener">2026 Results</a>
         <a class="btn btn-ghost btn-lg" href="photos.html">2026 Photos</a>
@@ -103,102 +113,49 @@
     </div>
   </section>
 
-  <section id="report" class="section section-alt">
-    <div class="wrap">
-      <p class="report-eyebrow">2026 Race Report</p>
-      <h2>New routes, new faces, same old Hambledon vibes</h2>
-      <!-- Photo spaces load images/report/1.jpg, 2.jpg ... (one per paragraph). Missing photos are hidden on the live site. -->
-      <div class="report">
-        <div class="report-row">
-          <p>Records are made to be broken, but not easily achieved. After 11 years, the Hambledon Hilly team confidently declared that the latest event on 19 September was the finest ever.</p>
-          <figure class="report-photo">
-            <img src="images/report/1.jpg" alt="Hambledon Hilly 2026" loading="lazy">
-          </figure>
+  <section id="about" class="section">
+    <div class="wrap about-grid">
+      <div class="about-copy">
+        <h2>Welcome back to the Vineyard</h2>
+        <p>
+          The Hambledon Hilly returns to the stunning Hambledon Vineyard, England's oldest
+          commercial vineyard, on <strong>19 September 2026</strong>. Join us for a day of
+          scenic running, and superb food and drink in this beautiful part of the world.
+        </p>
+        <p>
+          At race HQ within the Hambledon Wine Estate, the vineyard team will be serving
+          high-quality food and beverages, including its award-winning sparkling wine. We're
+          hoping that runners, families, volunteers and supporters will stay with us right
+          through into the afternoon to enjoy the event and help us raise money for
+          <strong><a href="https://braintumourresearch.org/" target="_blank" rel="noopener">Brain Tumour Research</a></strong> and <strong>Hambledon Primary School</strong>.
+        </p>
+        <p>
+          The main vineyard visitors centre will also be open on the day for tours, tasting
+          and dining. Bookings should be made well in advance at
+          <a href="https://www.hambledonvineyard.co.uk" target="_blank" rel="noopener">hambledonvineyard.co.uk</a>.
+        </p>
+        <a class="btn btn-primary" href="#location">Getting There &rarr;</a>
+      </div>
+      <div class="about-facts">
+        <div class="fact-card">
+          <span class="fact-label">Date</span>
+          <span class="fact-value">Saturday 19 September 2026</span>
         </div>
-        <div class="report-row">
-          <p>A new timing system and finishing line brought a new level of professionalism to the event. Well over 320 runners demonstrated that we could attract racers from the village, the vicinity and much further afield.</p>
-          <figure class="report-photo">
-            <img src="images/report/2.jpg" alt="Hambledon Hilly 2026" loading="lazy">
-          </figure>
+        <div class="fact-card">
+          <span class="fact-label">Venue</span>
+          <span class="fact-value">Hambledon Vineyard, Hambledon Wine Estate</span>
         </div>
-        <div class="report-row">
-          <p>Even in windy conditions, runners battled through the new giant 20km circuit, taking in Winchester Hill and Meon Springs along the way. New routes for the 10km and 5km included longer sections in the vineyard itself and a challenging descent through Speltham Down. The 10km runners, though, still had to endure the infamous Glidden Lane climb.</p>
-          <figure class="report-photo">
-            <img src="images/report/3.jpg" alt="Hambledon Hilly 2026" loading="lazy">
-          </figure>
+        <div class="fact-card">
+          <span class="fact-label">Distances</span>
+          <span class="fact-value">1k &middot; 2k &middot; 5k &middot; 10k &middot; Trail 20k</span>
         </div>
-        <div class="report-row">
-          <p>At race headquarters up at the Hambledon Vineyard marquee, the vineyard team served breakfast baps, followed by exquisite pulled pork buns. The Friends of Hambledon raised &pound;340 for Hambledon Primary by selling beer and soft drinks kindly donated by Bowmans Ales and Hartridges Soft Drinks. Our charity partner Brain Tumour Research raised hundreds of pounds thanks to some incredibly generous donations.</p>
-          <figure class="report-photo">
-            <img src="images/report/4.jpg" alt="Hambledon Hilly 2026" loading="lazy">
-          </figure>
+        <div class="fact-card">
+          <span class="fact-label">In aid of</span>
+          <span class="fact-value"><a href="https://braintumourresearch.org/" target="_blank" rel="noopener">Brain Tumour Research</a> &amp; Hambledon Primary School</span>
         </div>
-        <div class="report-row">
-          <p>As always, dozens of Hambledon villagers turned out to help with the event, ensuring that everything went smoothly and all runners were ushered in the right direction.</p>
-          <figure class="report-photo">
-            <img src="images/report/5.jpg" alt="Hambledon Hilly 2026" loading="lazy">
-          </figure>
-        </div>
-        <div class="report-row">
-          <p>A huge thanks to De Mellow &amp; Co for providing incredible support in the lead up to and throughout the event itself, particularly Mark Watkiss, Freya Stanger and Alona Bondarenko. Thanks also to The Country House Company for continuing to support the running numbers.</p>
-          <figure class="report-photo">
-            <img src="images/report/6.jpg" alt="Hambledon Hilly 2026" loading="lazy">
-          </figure>
-        </div>
-        <div class="report-row">
-          <p>Enormous gratitude to Harry Austin and the Hambledon Vineyard team for hosting the event and looking after us with incredible food and drink, and for donating bottles of Hambledon Classic Cuv&eacute;e for the race winners.</p>
-          <div class="podium-carousel" role="region" aria-roledescription="carousel" aria-label="2026 podium winners">
-            <div class="podium-track">
-              <figure class="podium-slide">
-                <img src="images/report/7-F1.jpg" alt="1km girls podium" loading="lazy">
-                <figcaption>1km &middot; Girls</figcaption>
-              </figure>
-              <figure class="podium-slide">
-                <img src="images/report/7-M1.jpg" alt="1km boys podium" loading="lazy">
-                <figcaption>1km &middot; Boys</figcaption>
-              </figure>
-              <figure class="podium-slide">
-                <img src="images/report/7-F2.jpg" alt="2km girls podium" loading="lazy">
-                <figcaption>2km &middot; Girls</figcaption>
-              </figure>
-              <figure class="podium-slide">
-                <img src="images/report/7-M2.jpg" alt="2km boys podium" loading="lazy">
-                <figcaption>2km &middot; Boys</figcaption>
-              </figure>
-              <figure class="podium-slide">
-                <img src="images/report/7-F5.jpg" alt="5km women podium" loading="lazy">
-                <figcaption>5km &middot; Women</figcaption>
-              </figure>
-              <figure class="podium-slide">
-                <img src="images/report/7-M5.jpg" alt="5km men podium" loading="lazy">
-                <figcaption>5km &middot; Men</figcaption>
-              </figure>
-              <figure class="podium-slide">
-                <img src="images/report/7-F10.jpg" alt="10km women podium" loading="lazy">
-                <figcaption>10km &middot; Women</figcaption>
-              </figure>
-              <figure class="podium-slide">
-                <img src="images/report/7-M10.jpg" alt="10km men podium" loading="lazy">
-                <figcaption>10km &middot; Men</figcaption>
-              </figure>
-              <figure class="podium-slide">
-                <img src="images/report/7-F20.jpg" alt="20km women podium" loading="lazy">
-                <figcaption>20km &middot; Women</figcaption>
-              </figure>
-              <figure class="podium-slide">
-                <img src="images/report/7-M20.jpg" alt="20km men podium" loading="lazy">
-                <figcaption>20km &middot; Men</figcaption>
-              </figure>
-            </div>
-            <button class="podium-prev" type="button" aria-label="Previous podium">&lsaquo;</button>
-            <button class="podium-next" type="button" aria-label="Next podium">&rsaquo;</button>
-          </div>
-        </div>
-        <div class="report-row">
-          <p>We&rsquo;re looking forward to expanding the event once again in 2027.</p>
-          <figure class="report-photo">
-            <img src="images/report/8.jpg" alt="Hambledon Hilly 2026" loading="lazy">
-          </figure>
+        <div class="fact-card">
+          <span class="fact-label">Entries close</span>
+          <span class="fact-value">16 September 2026</span>
         </div>
       </div>
     </div>
@@ -206,8 +163,8 @@
 
   <section id="video" class="section">
     <div class="wrap">
-      <h2>Highlights</h2>
-      <p class="section-lede">Browse a selection of photos from this year&rsquo;s race, and relive last year&rsquo;s in the 2025 highlights video. The 2026 video is coming soon.</p>
+      <h2>2025 Highlights</h2>
+      <p class="section-lede">Relive last year's Hambledon Hilly before you sign up for 2026.</p>
     </div>
     <div class="wrap video-gallery-grid">
       <div class="video-panel">
@@ -234,6 +191,55 @@
     <img id="lightbox-img" src="" alt="">
     <button class="lightbox-next" type="button" aria-label="Next photo">&rsaquo;</button>
   </dialog>
+
+  <section id="routes" class="section section-alt">
+    <div class="wrap">
+      <h2>Choose Your Route</h2>
+      <p class="section-lede">All races start and finish at race HQ within the vineyard estate. Pick a distance to see the course, start time and entry fee. Full course descriptions and race-day details are on the <a href="race-info.html">Race Info</a> page.</p>
+
+      <div class="route-tabs" role="tablist" aria-label="Route distance">
+        <button class="route-tab" data-route="1k" role="tab" aria-selected="false">1k</button>
+        <button class="route-tab" data-route="2k" role="tab" aria-selected="false">2k</button>
+        <button class="route-tab" data-route="5k" role="tab" aria-selected="false">5k</button>
+        <button class="route-tab" data-route="10k" role="tab" aria-selected="false">10k</button>
+        <button class="route-tab is-active" data-route="20k" role="tab" aria-selected="true">Trail 20k</button>
+      </div>
+
+      <div class="route-panel">
+        <div class="route-map-col">
+          <div id="route-map" class="route-map" role="img" aria-label="Map of the selected route"></div>
+          <a id="gpx-download" class="route-gpx-link" href="#" download>&#8681; Download GPX</a>
+        </div>
+        <div class="route-stats" id="route-stats">
+          <!-- populated by js -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="day" class="section">
+    <div class="wrap day-grid">
+      <div class="day-copy">
+        <h2>On the Day</h2>
+        <p>
+          Stick around at race HQ and make an afternoon of it. The vineyard team will be
+          serving food and drink &mdash; including their award-winning sparkling wine &mdash;
+          right through the afternoon, with plenty to enjoy for runners, families,
+          volunteers and supporters alike.
+        </p>
+        <ul class="day-list">
+          <li>Food and drink from the Hambledon Vineyard team</li>
+          <li>Award-winning sparkling wine, tastings and tours</li>
+          <li>A finish-line atmosphere for the whole family</li>
+          <li>All proceeds help <a href="https://braintumourresearch.org/" target="_blank" rel="noopener">Brain Tumour Research</a> and Hambledon Primary School</li>
+        </ul>
+        <p>
+          Fancy making a day of it? Book a vineyard tour, tasting or table well in advance at
+          <a href="https://www.hambledonvineyard.co.uk" target="_blank" rel="noopener">hambledonvineyard.co.uk</a>.
+        </p>
+      </div>
+    </div>
+  </section>
 
   <section id="sponsors" class="section section-alt">
     <div class="wrap">
@@ -286,8 +292,8 @@
 
   <section class="cta-banner">
     <div class="wrap cta-banner-inner">
-      <h2>See you in 2027</h2>
-      <a class="btn btn-primary btn-lg" href="https://sites.chronotrack.com/event/94311/results?raceId=250518&divisionId=2814686" target="_blank" rel="noopener">View the 2026 Results</a>
+      <h2>Ready to take on the Hilly?</h2>
+      <a class="btn btn-primary btn-lg" href="https://sites.chronotrack.com/event/94311/results?raceId=250518&divisionId=2814686" target="_blank" rel="noopener">Enter Now</a>
     </div>
   </section>
 

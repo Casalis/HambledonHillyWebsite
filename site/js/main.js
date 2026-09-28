@@ -1,5 +1,12 @@
 const header = document.querySelector('.site-header');
 
+// Photo Worker (see /worker) serving the R2 photo bucket; no trailing slash. When the site
+// is served locally, the local Worker from `npx wrangler dev` (port 8787) is used instead.
+const IS_LOCAL_PREVIEW = ['localhost', '127.0.0.1'].includes(location.hostname);
+const PHOTO_API = IS_LOCAL_PREVIEW
+  ? 'http://localhost:8787'
+  : 'https://photos.hambledonhilly.com';
+
 // Mobile nav toggle
 const navToggle = document.querySelector('.nav-toggle');
 if (navToggle) {
@@ -264,27 +271,99 @@ if (locationMapEl && typeof ROUTES !== 'undefined') {
   L.marker(center).addTo(locationMap).bindPopup('Hambledon Vineyard — Race HQ').openPopup();
 }
 
-// Photo gallery lightbox
+// Race report photo spaces (images/report/N.jpg). A photo that hasn't been added yet is
+// hidden on the live site, and shown as a labelled placeholder when previewing locally.
+document.querySelectorAll('.report-photo img').forEach(img => {
+  const handleMissing = () => {
+    const figure = img.closest('.report-photo');
+    if (IS_LOCAL_PREVIEW) {
+      figure.classList.add('is-placeholder');
+      figure.append(`Photo space: ${img.getAttribute('src')}`);
+    } else {
+      figure.closest('.report-row').classList.add('no-photo');
+      figure.remove();
+    }
+  };
+  if (img.complete && img.naturalWidth === 0) handleMissing();
+  else img.addEventListener('error', handleMissing, { once: true });
+});
+
+// Podium winners carousel: arrow buttons, swipe (native scroll-snap) and a gentle auto-advance
+// that pauses while the visitor is hovering, touching or using the keyboard on it.
+document.querySelectorAll('.podium-carousel').forEach(carousel => {
+  const track = carousel.querySelector('.podium-track');
+  const slideCount = track.children.length;
+  const currentIndex = () => Math.round(track.scrollLeft / track.clientWidth);
+  const goTo = index => {
+    const target = (index + slideCount) % slideCount;
+    track.scrollTo({ left: target * track.clientWidth, behavior: 'smooth' });
+  };
+
+  carousel.querySelector('.podium-prev').addEventListener('click', () => goTo(currentIndex() - 1));
+  carousel.querySelector('.podium-next').addEventListener('click', () => goTo(currentIndex() + 1));
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let paused = false;
+  ['mouseenter', 'focusin', 'touchstart'].forEach(e => carousel.addEventListener(e, () => { paused = true; }, { passive: true }));
+  ['mouseleave', 'focusout'].forEach(e => carousel.addEventListener(e, () => { paused = false; }));
+  setInterval(() => {
+    if (!paused && !document.hidden) goTo(currentIndex() + 1);
+  }, 4000);
+});
+
+// Home page photo grid: a random selection of photos from R2, each opening full size in the lightbox.
 const galleryEl = document.getElementById('photo-gallery');
 const lightbox = document.getElementById('photo-lightbox');
 if (galleryEl && lightbox) {
-  const thumbs = Array.from(galleryEl.querySelectorAll('.photo-thumb'));
   const lightboxImg = document.getElementById('lightbox-img');
+  let galleryPhotos = [];
   let currentIndex = 0;
 
   function showPhoto(index) {
-    currentIndex = (index + thumbs.length) % thumbs.length;
-    const img = thumbs[currentIndex].querySelector('img');
-    lightboxImg.src = img.src;
-    lightboxImg.alt = img.alt;
+    currentIndex = (index + galleryPhotos.length) % galleryPhotos.length;
+    lightboxImg.src = PHOTO_API + galleryPhotos[currentIndex].src;
+    lightboxImg.alt = `Hambledon Hilly photo ${currentIndex + 1}`;
   }
 
-  thumbs.forEach((thumb, index) => {
-    thumb.addEventListener('click', () => {
-      showPhoto(index);
-      lightbox.showModal();
+  async function loadGallery() {
+    const params = new URLSearchParams({
+      album: galleryEl.dataset.album || '',
+      count: galleryEl.dataset.count || '18',
     });
-  });
+    try {
+      const res = await fetch(`${PHOTO_API}/api/random?${params}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      galleryPhotos = (await res.json()).photos;
+    } catch (err) {
+      // Leave the grid empty; the "View more photos" button still links to the album.
+      console.error('Photo grid:', err);
+      return;
+    }
+
+    galleryPhotos.forEach((photo, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'photo-thumb';
+
+      const img = document.createElement('img');
+      img.src = PHOTO_API + photo.thumb;
+      img.addEventListener('error', () => {
+        if (img.src !== PHOTO_API + photo.src) img.src = PHOTO_API + photo.src;
+      });
+      img.alt = `Hambledon Hilly photo ${index + 1}`;
+      img.loading = 'lazy';
+      img.decoding = 'async';
+
+      button.appendChild(img);
+      button.addEventListener('click', () => {
+        showPhoto(index);
+        lightbox.showModal();
+      });
+      galleryEl.appendChild(button);
+    });
+  }
+
+  loadGallery();
 
   lightbox.querySelector('.lightbox-close').addEventListener('click', () => lightbox.close());
   lightbox.querySelector('.lightbox-prev').addEventListener('click', () => showPhoto(currentIndex - 1));
