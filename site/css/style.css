@@ -516,6 +516,123 @@ a { color: var(--gold-700); }
   margin-top: 4px;
 }
 
+/* Race report: each paragraph sits beside a photo, alternating sides */
+.report-eyebrow {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--gold-700);
+}
+.report {
+  display: grid;
+  gap: 40px;
+  margin-top: 32px;
+}
+.report-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 40px;
+  align-items: center;
+}
+.report-row p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 1.1rem;
+}
+.report-row:nth-child(even) > :not(p) { order: -1; }
+.report-row.no-photo { grid-template-columns: minmax(0, 1fr); max-width: 62ch; }
+.report-photo { margin: 0; }
+.report-photo img {
+  display: block;
+  width: 100%;
+  max-height: 520px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+/* Shown only when previewing locally, where a photo hasn't been added yet */
+.report-photo.is-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  border: 2px dashed var(--gold-700);
+  border-radius: var(--radius);
+  color: var(--gold-700);
+  font-weight: 700;
+  text-align: center;
+  padding: 16px;
+}
+.report-photo.is-placeholder img { display: none; }
+
+/* Podium winners carousel inside the race report */
+.podium-carousel {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  background: var(--dark-900);
+}
+.podium-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.podium-track::-webkit-scrollbar { display: none; }
+.podium-slide {
+  position: relative;
+  flex: 0 0 100%;
+  margin: 0;
+  scroll-snap-align: start;
+}
+.podium-slide img {
+  display: block;
+  width: 100%;
+  height: 520px;
+  object-fit: cover;
+}
+.podium-slide figcaption {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 40px 20px 16px;
+  background: linear-gradient(180deg, transparent, rgba(22, 22, 15, 0.8));
+  color: var(--white);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.podium-prev,
+.podium-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(22, 22, 15, 0.55);
+  color: var(--white);
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+.podium-prev:hover, .podium-next:hover,
+.podium-prev:focus-visible, .podium-next:focus-visible { background: rgba(22, 22, 15, 0.85); }
+.podium-prev { left: 12px; }
+.podium-next { right: 12px; }
+
+@media (max-width: 760px) {
+  .podium-slide img { height: 420px; }
+  .report-row { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .report-row:nth-child(even) > :not(p) { order: 0; }
+}
+
 /* Day / list */
 .day-grid { max-width: 780px; }
 .day-copy p { color: var(--ink-soft); font-size: 1.05rem; }
