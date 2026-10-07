@@ -6,8 +6,10 @@
 //   GET /api/photos?album=2025/&cursor=  -> one page of photos in that folder, plus a cursor for the next page
 //   GET /api/random?count=18&album=2026/ -> a random selection of photos (album optional: whole bucket)
 //   GET /photo/<key>                     -> the image itself, streamed straight from R2
+//   GET /video/<key>                     -> a video from the "video/" folder, with Range support
 //
-// The bucket stays private: only this Worker can read it, and it only ever serves images.
+// The bucket stays private: only this Worker can read it, and it only ever serves images
+// and the highlights videos.
 
 const IMAGE_TYPES = {
   jpg: 'image/jpeg',
@@ -18,8 +20,15 @@ const IMAGE_TYPES = {
   gif: 'image/gif',
 };
 
+const VIDEO_TYPES = {
+  mp4: 'video/mp4',
+  webm: 'video/webm',
+};
+
 const PAGE_SIZE = 48;
 const THUMBS_FOLDER = 'thumbs/';
+// Highlights videos (and their poster images) live here, kept out of the photo albums.
+const VIDEO_FOLDER = 'video/';
 const RANDOM_MAX = 50;
 const KEY_LIST_TTL = 600;
 
@@ -77,7 +86,9 @@ async function listAlbums(env, url) {
   let cursor;
   do {
     const page = await env.PHOTOS.list({ prefix: parent, delimiter: '/', cursor });
-    albums.push(...page.delimitedPrefixes.filter(prefix => prefix !== parent + THUMBS_FOLDER));
+    albums.push(...page.delimitedPrefixes.filter(
+      prefix => prefix !== parent + THUMBS_FOLDER && prefix !== VIDEO_FOLDER,
+    ));
     cursor = page.truncated ? page.cursor : undefined;
   } while (cursor);
   return json({ albums });
@@ -118,7 +129,9 @@ async function allPhotoKeys(env, ctx, url) {
   do {
     const page = await env.PHOTOS.list({ cursor });
     for (const obj of page.objects) {
-      if (isImage(obj.key) && !obj.key.split('/').includes('thumbs')) keys.push(obj.key);
+      if (isImage(obj.key) && !obj.key.split('/').includes('thumbs') && !obj.key.startsWith(VIDEO_FOLDER)) {
+        keys.push(obj.key);
+      }
     }
     cursor = page.truncated ? page.cursor : undefined;
   } while (cursor);
@@ -173,6 +186,36 @@ async function servePhoto(request, env, ctx, url) {
   return response;
 }
 
+// Videos are streamed with Range support so browsers (Safari/iOS in particular) can seek
+// and start playback before the whole file has downloaded.
+async function serveVideo(request, env, url) {
+  const key = VIDEO_FOLDER + decodeURIComponent(url.pathname.slice('/video/'.length));
+  const contentType = VIDEO_TYPES[extensionOf(key)];
+  if (!contentType) return notFound();
+
+  const object = await env.PHOTOS.get(key, { range: request.headers });
+  if (!object) return notFound();
+
+  const headers = new Headers(CORS_HEADERS);
+  object.writeHttpMetadata(headers);
+  headers.set('Content-Type', contentType);
+  headers.set('Accept-Ranges', 'bytes');
+  headers.set('ETag', object.httpEtag);
+  headers.set('Cache-Control', 'public, max-age=86400');
+
+  let status = 200;
+  let length = object.size;
+  if (object.range && request.headers.has('Range')) {
+    const offset = object.range.offset ?? object.size - object.range.suffix;
+    length = object.range.length ?? object.range.suffix ?? object.size - offset;
+    headers.set('Content-Range', `bytes ${offset}-${offset + length - 1}/${object.size}`);
+    status = 206;
+  }
+  headers.set('Content-Length', String(length));
+
+  return new Response(request.method === 'HEAD' ? null : object.body, { status, headers });
+}
+
 export default {
   async fetch(request, env, ctx) {
     if (request.method === 'OPTIONS') {
@@ -188,6 +231,7 @@ export default {
     if (url.pathname === '/api/photos') return listPhotos(env, url);
     if (url.pathname === '/api/random') return randomPhotos(env, ctx, url);
     if (url.pathname.startsWith('/photo/')) return servePhoto(request, env, ctx, url);
+    if (url.pathname.startsWith('/video/')) return serveVideo(request, env, url);
 
     return notFound();
   },

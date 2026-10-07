@@ -242,6 +242,14 @@ a { color: var(--gold-700); }
   box-shadow: var(--shadow-md);
 }
 
+.video-embed video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 9 / 16;
+  background: #000;
+}
+
 /* Photo gallery */
 .photo-gallery {
   display: grid;
