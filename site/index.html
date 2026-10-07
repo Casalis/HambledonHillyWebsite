@@ -16,9 +16,7 @@
 <div id="cookie-banner" class="cookie-banner" role="dialog" aria-label="Cookie consent" hidden>
   <div class="cookie-banner-inner">
     <p>
-      We use a small number of cookies to run this site. Necessary cookies keep it working;
-      the embedded 2025 Highlights video is provided by Vimeo, which sets its own cookies once
-      you choose to load it. You can change your choice any time via "Cookie Preferences" in the footer.
+      We use a small number of cookies to run this site. Necessary cookies keep it working. You can change your choice any time via "Cookie Preferences" in the footer.
     </p>
     <div class="cookie-banner-actions">
       <button type="button" class="btn btn-ghost" id="cookie-reject">Necessary only</button>
@@ -103,7 +101,31 @@
     </div>
   </section>
 
-  <section id="report" class="section section-alt">
+  <section id="video" class="section section-alt">
+    <div class="wrap">
+      <h2>Highlights</h2>
+      <p class="section-lede">Watch the 2026 highlights video and browse a selection of photos from this year&rsquo;s race.</p>
+    </div>
+    <div class="wrap video-gallery-grid">
+      <div class="video-panel">
+        <div class="video-embed">
+          <video controls playsinline preload="none" width="1080" height="1920"
+                 poster="https://photos.hambledonhilly.com/photo/video/highlights-2026-poster.jpg"
+                 aria-label="Hambledon Hilly 2026 highlights">
+            <source src="https://photos.hambledonhilly.com/video/highlights-2026.mp4" type="video/mp4">
+          </video>
+        </div>
+      </div>
+      <div class="gallery-panel">
+        <div class="photo-gallery" id="photo-gallery" data-album="2026/" data-count="18" aria-label="A random selection of Hambledon Hilly photos"></div>
+        <div class="gallery-more">
+          <a class="btn btn-primary" href="photos.html">View more photos</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="report" class="section">
     <div class="wrap">
       <p class="report-eyebrow">2026 Race Report</p>
       <h2>New routes, new faces, same old Hambledon vibes</h2>
@@ -204,30 +226,6 @@
     </div>
   </section>
 
-  <section id="video" class="section">
-    <div class="wrap">
-      <h2>Highlights</h2>
-      <p class="section-lede">Browse a selection of photos from this year&rsquo;s race, and relive last year&rsquo;s in the 2025 highlights video. The 2026 video is coming soon.</p>
-    </div>
-    <div class="wrap video-gallery-grid">
-      <div class="video-panel">
-        <div id="video-consent-gate" data-video-id="1141648150">
-          <div class="video-embed" id="video-embed" hidden></div>
-          <div class="video-consent-notice" id="video-consent-notice">
-            <p>This video is hosted by Vimeo, which sets cookies when played.</p>
-            <button type="button" class="btn btn-primary" id="video-consent-accept">Accept cookies &amp; watch</button>
-          </div>
-        </div>
-      </div>
-      <div class="gallery-panel">
-        <div class="photo-gallery" id="photo-gallery" data-album="2026/" data-count="18" aria-label="A random selection of Hambledon Hilly photos"></div>
-        <div class="gallery-more">
-          <a class="btn btn-primary" href="photos.html">View more photos</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <dialog id="photo-lightbox" class="photo-lightbox">
     <button class="lightbox-close" type="button" aria-label="Close">&times;</button>
     <button class="lightbox-prev" type="button" aria-label="Previous photo">&lsaquo;</button>
@@ -307,7 +305,6 @@
   </div>
 </footer>
 
-<script src="https://player.vimeo.com/api/player.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="https://unpkg.com/leaflet-gesture-handling@1.2.2/dist/leaflet-gesture-handling.min.js" crossorigin=""></script>
 <script src="routes/routes-data.js"></script>

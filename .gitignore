@@ -6,3 +6,4 @@ EventInfo.md
 .claude/settings.local.json
 worker/.wrangler
 worker/node_modules
+/Video
