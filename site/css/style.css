@@ -250,6 +250,15 @@ a { color: var(--gold-700); }
   background: #000;
 }
 
+.video-credit {
+  max-width: 320px;
+  margin: 12px 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+.video-credit a { color: inherit; font-weight: 600; }
+
 /* Photo gallery */
 .photo-gallery {
   display: grid;
@@ -376,7 +385,8 @@ a { color: var(--gold-700); }
 
 @media (max-width: 900px) {
   .video-gallery-grid { grid-template-columns: 1fr; gap: 40px; }
-  .video-embed { margin-left: auto; margin-right: auto; }
+  .video-embed,
+  .video-credit { margin-left: auto; margin-right: auto; }
 }
 
 @media (max-width: 480px) {
@@ -813,6 +823,18 @@ a { color: var(--gold-700); }
   display: flex;
   gap: 20px;
   flex-wrap: wrap;
+}
+.footer-credit {
+  margin-top: 20px;
+  margin-bottom: 0;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.55);
+}
+.footer-credit a {
+  color: rgba(255,255,255,0.8);
+  font-weight: 600;
 }
 
 /* Leaflet popup theming */
