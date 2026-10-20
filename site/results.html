@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Results | The Hambledon Hilly</title>
+<meta name="description" content="Every Hambledon Hilly result since 2015. Look up your own race history and explore winners, records and how the field has grown.">
+<link rel="icon" type="image/svg+xml" href="images/hambledonhilly-logo.svg">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  /* Results page. Chart colours: men/women are a validated categorical pair; the three
+     distances are one gold hue stepped light to dark (5k, 10k, 20k). */
+  :root {
+    --men: #2f6db0;
+    --women: #a9840f;
+    --unknown: #b9b4a5;
+    --d5: #d9b23a;
+    --d10: #a9840f;
+    --d20: #5e4a12;
+    --grid: #ece6d6;
+  }
+  .results-hero { padding-bottom: 40px; }
+  .results-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-top: 28px;
+  }
+  .results-tiles .stat-card .stat-value { font-size: 1.8rem; }
+
+  .chart-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 20px 20px 12px;
+    min-width: 0;
+  }
+  .chart-card h3 { font-size: 1.2rem; margin-bottom: 2px; }
+  .chart-sub { color: var(--ink-soft); font-size: 0.92rem; margin: 0 0 12px; }
+  .chart { width: 100%; position: relative; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .chart text { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; fill: var(--ink-soft); font-size: 12px; }
+  .chart .axis-label { fill: var(--ink-soft); font-size: 12px; }
+  .chart .grid line { stroke: var(--grid); stroke-width: 1; }
+  .chart .baseline { stroke: #cfc7b2; stroke-width: 1; }
+  .chart [data-tip] { cursor: pointer; }
+  .chart .hit { fill: transparent; }
+  .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin: 0 0 10px;
+    padding: 0;
+    list-style: none;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+  }
+  .chart-legend li { display: flex; align-items: center; gap: 6px; }
+  .chart-legend .sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .chart-note { font-size: 0.85rem; color: var(--ink-soft); margin: 8px 0 0; }
+
+  .chart-tip {
+    position: fixed;
+    z-index: 1500;
+    pointer-events: none;
+    background: var(--dark-900);
+    color: var(--white);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    box-shadow: var(--shadow-md);
+    max-width: 260px;
+  }
+  .chart-tip[hidden] { display: none; }
+  .chart-tip strong { color: var(--gold-100); }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 28px;
+  }
+  @media (max-width: 860px) { .grid-2 { grid-template-columns: minmax(0, 1fr); } }
+
+  /* Runner search */
+  .runner-search { position: relative; max-width: 560px; margin-top: 24px; }
+  .runner-search label { display: block; font-weight: 700; margin-bottom: 8px; }
+  .runner-search input,
+  .filter-row input,
+  .filter-row select {
+    width: 100%;
+    font: inherit;
+    padding: 0.8em 1.1em;
+    border: 2px solid var(--dark-700);
+    border-radius: 999px;
+    background: var(--white);
+    color: var(--ink);
+  }
+  .runner-search input { font-size: 1.1rem; }
+  .runner-search input:focus,
+  .filter-row input:focus,
+  .filter-row select:focus { outline: 3px solid var(--gold-500); outline-offset: 2px; }
+  .suggest {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    margin: 6px 0 0;
+    padding: 6px;
+    list-style: none;
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    z-index: 50;
+    max-height: 340px;
+    overflow-y: auto;
+  }
+  .suggest[hidden] { display: none; }
+  .suggest li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  .suggest li[aria-selected="true"], .suggest li:hover { background: var(--gold-100); }
+  .suggest .meta { color: var(--ink-soft); font-size: 0.88rem; white-space: nowrap; }
+  .suggest .empty { cursor: default; color: var(--ink-soft); }
+  .search-hints { margin-top: 14px; color: var(--ink-soft); font-size: 0.95rem; }
+  .link-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: var(--gold-700);
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .runner-profile { margin-top: 36px; }
+  .runner-profile[hidden] { display: none; }
+  .runner-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 18px; }
+  .runner-head h3 { font-size: clamp(1.6rem, 3vw, 2.1rem); margin: 0; }
+  .runner-head .club { color: var(--ink-soft); font-weight: 600; }
+  .share-btn { margin-left: auto; }
+  .badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; }
+  .badges li {
+    background: var(--gold-100);
+    color: var(--dark-900);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin-top: 16px; border-radius: var(--radius); box-shadow: var(--shadow-sm); background: var(--white); }
+  table.results { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
+  table.results th, table.results td { padding: 10px 14px; text-align: left; white-space: nowrap; }
+  table.results th {
+    background: var(--dark-700);
+    color: var(--white);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    position: sticky;
+    top: 0;
+  }
+  table.results tbody tr:nth-child(even) { background: #fbf9f3; }
+  table.results tbody tr.is-me { background: var(--gold-100); font-weight: 700; }
+  table.results td.num { font-variant-numeric: tabular-nums; }
+  table.results .muted { color: var(--ink-soft); }
+  .scroll-table { max-height: 560px; overflow-y: auto; }
+
+  .filter-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 8px; }
+  .filter-row input { max-width: 280px; }
+  .filter-row select { width: auto; padding-right: 2em; }
+  .route-tabs.compact { margin: 24px 0 12px; }
+
+  .winners { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin: 20px 0 24px; }
+  .winners .fact-card.men { border-left-color: var(--men); }
+
+  /* Leaderboards */
+  .board { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .board li { display: grid; grid-template-columns: 1.6em minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+  .board .rank { color: var(--ink-soft); font-variant-numeric: tabular-nums; text-align: right; }
+  .board .who { min-width: 0; }
+  .board .who button { text-align: left; color: var(--dark-900); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; display: block; }
+  .board .who button:hover { color: var(--gold-700); text-decoration: underline; }
+  .board .bar { height: 8px; border-radius: 0 4px 4px 0; background: var(--gold-700); margin-top: 4px; }
+  .board .val { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .records td:first-child { font-weight: 700; }
+  table.records td { white-space: normal; vertical-align: top; }
+  table.records .link-btn { text-align: left; }
+</style>
+</head>
+<body>
+
+<div id="cookie-banner" class="cookie-banner" role="dialog" aria-label="Cookie consent" hidden>
+  <div class="cookie-banner-inner">
+    <p>
+      We use a small number of cookies to run this site. Necessary cookies keep it working. You can change your choice any time via "Cookie Preferences" in the footer.
+    </p>
+    <div class="cookie-banner-actions">
+      <button type="button" class="btn btn-ghost" id="cookie-reject">Necessary only</button>
+      <button type="button" class="btn btn-primary" id="cookie-accept">Accept all</button>
+    </div>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="index.html#top">
+      <img class="brand-logo" src="images/hambledonhilly-logo.svg" alt="The Hambledon Hilly">
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="index.html#report">Race Report</a>
+      <a href="index.html#sponsors">Sponsors</a>
+      <a href="index.html#location">Location</a>
+      <a href="our-story.html">Our Story</a>
+      <a href="race-info.html">Race Info</a>
+      <a href="photos.html">Photos</a>
+      <a href="results.html">Results</a>
+    </nav>
+    <a class="btn btn-primary nav-cta" href="https://sites.chronotrack.com/event/94311/results?raceId=250518&divisionId=2814686" target="_blank" rel="noopener">2026 Results</a>
+    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="section results-hero">
+    <div class="wrap">
+      <p class="hero-eyebrow" style="color:var(--gold-700);" id="hero-eyebrow">Results archive</p>
+      <h1>Results</h1>
+      <p class="section-lede">
+        Every Hambledon Hilly result we hold, from the first race in 2015 to today.
+        Look up your own race history, or explore the winners, records and how the
+        field has grown.
+      </p>
+      <div class="results-tiles" id="headline-tiles"></div>
+    </div>
+  </section>
+
+  <section id="runner" class="section section-alt">
+    <div class="wrap">
+      <h2>Find a Runner</h2>
+      <p class="section-lede">Type your name to see every Hilly you've run, your personal bests and how you've placed against the field.</p>
+      <div class="runner-search">
+        <label for="runner-search">Runner name</label>
+        <input id="runner-search" type="search" autocomplete="off" placeholder="e.g. Julian Manning"
+               role="combobox" aria-expanded="false" aria-controls="runner-suggest" aria-autocomplete="list">
+        <ul id="runner-suggest" class="suggest" role="listbox" hidden></ul>
+      </div>
+      <p class="search-hints" id="search-hints"></p>
+
+      <div id="runner-profile" class="runner-profile" hidden aria-live="polite">
+        <div class="runner-head">
+          <h3 id="rp-name"></h3>
+          <span class="club" id="rp-club"></span>
+          <button type="button" class="btn btn-ghost-dark share-btn" id="rp-share">Copy link</button>
+        </div>
+        <ul class="badges" id="rp-badges"></ul>
+        <div class="results-tiles" id="rp-tiles"></div>
+        <div class="chart-card" style="margin-top:24px;">
+          <h3>How you placed against the field</h3>
+          <p class="chart-sub">The share of finishers you beat in each race. Higher is better, so you can compare across distances and years.</p>
+          <ul class="chart-legend" id="rp-legend"></ul>
+          <div class="chart" id="rp-chart"></div>
+        </div>
+        <div class="table-wrap">
+          <table class="results">
+            <thead><tr><th>Year</th><th>Race</th><th>Position</th><th>Gender pos.</th><th>Category</th><th>Time</th><th>Pace /km</th><th>Beat</th></tr></thead>
+            <tbody id="rp-table"></tbody>
+          </table>
+        </div>
+        <p class="chart-note">From 2025 the race starts and finishes at Hambledon Vineyard, with an uphill finish, so times before and after the move aren't directly comparable. Times are gun times.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="races" class="section">
+    <div class="wrap">
+      <h2>Race by Race</h2>
+      <p class="section-lede">Pick a distance and year to see the winners, how the field spread out, and the full results.</p>
+      <div class="route-tabs compact" id="race-dist-tabs" role="tablist" aria-label="Distance"></div>
+      <div class="filter-row">
+        <label for="race-year" class="fact-label">Year</label>
+        <select id="race-year"></select>
+      </div>
+      <div class="winners" id="race-winners"></div>
+      <div class="chart-card">
+        <h3 id="race-hist-title">Finish times</h3>
+        <p class="chart-sub" id="race-hist-sub"></p>
+        <ul class="chart-legend">
+          <li><span class="sw" style="background:var(--men)"></span>Men</li>
+          <li><span class="sw" style="background:var(--women)"></span>Women</li>
+          <li id="race-legend-unknown"><span class="sw" style="background:var(--unknown)"></span>Not recorded</li>
+        </ul>
+        <div class="chart" id="race-hist"></div>
+      </div>
+      <div class="filter-row" style="margin-top:24px;">
+        <input id="race-filter" type="search" placeholder="Filter by name or club" aria-label="Filter results by name or club">
+        <select id="race-gender" aria-label="Filter by gender">
+          <option value="">Everyone</option>
+          <option value="M">Men</option>
+          <option value="F">Women</option>
+        </select>
+      </div>
+      <div class="table-wrap scroll-table">
+        <table class="results">
+          <thead id="race-thead"></thead>
+          <tbody id="race-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="history" class="section section-alt">
+    <div class="wrap">
+      <h2>Through the Years</h2>
+      <p class="section-lede">How the Hilly has grown, and how fast the front of the field has been.</p>
+      <div class="grid-2">
+        <div class="chart-card">
+          <h3>Finishers each year</h3>
+          <p class="chart-sub">By race distance. No results are held for 2017 or 2020.</p>
+          <ul class="chart-legend" id="field-legend"></ul>
+          <div class="chart" id="field-chart"></div>
+        </div>
+        <div class="chart-card">
+          <h3>Winning times</h3>
+          <p class="chart-sub">The first man and first woman home each year.</p>
+          <div class="route-tabs compact" id="win-dist-tabs" role="tablist" aria-label="Distance" style="margin:0 0 12px;"></div>
+          <ul class="chart-legend">
+            <li><span class="sw" style="background:var(--men)"></span>Men</li>
+            <li><span class="sw" style="background:var(--women)"></span>Women</li>
+          </ul>
+          <div class="chart" id="win-chart"></div>
+          <p class="chart-note">The shaded years are on the vineyard course, which has a tougher, uphill finish.</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="chart-card">
+          <h3>Women in the field</h3>
+          <p class="chart-sub">The share of finishers who were women, across all races each year.</p>
+          <div class="chart" id="women-chart"></div>
+        </div>
+        <div class="chart-card">
+          <h3>Course records</h3>
+          <p class="chart-sub">The fastest time on each course.</p>
+          <div class="table-wrap" style="box-shadow:none;margin-top:0;">
+            <table class="results records">
+              <thead><tr><th>Race</th><th>Men</th><th>Women</th></tr></thead>
+              <tbody id="records-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="hall-of-fame" class="section">
+    <div class="wrap">
+      <h2>Hall of Fame</h2>
+      <p class="section-lede">The Hilly's most loyal runners and most successful racers.</p>
+      <div class="grid-2">
+        <div class="chart-card">
+          <h3>Most Hillys finished</h3>
+          <p class="chart-sub">Any distance, any year.</p>
+          <ol class="board" id="board-finishes"></ol>
+        </div>
+        <div class="chart-card">
+          <h3>Most wins</h3>
+          <p class="chart-sub">First man or first woman home, at any distance.</p>
+          <ol class="board" id="board-wins"></ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-banner">
+    <div class="wrap cta-banner-inner">
+      <h2>Ready to take on the Hilly?</h2>
+      <a class="btn btn-primary btn-lg" href="race-info.html">Race Info</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <img class="footer-logo" src="images/hambledonhilly-logo.svg" alt="The Hambledon Hilly">
+    <p>&copy; 2026 The Hambledon Hilly. Held at Hambledon Vineyard in aid of Brain Tumour Research and Hambledon Primary School.</p>
+    <nav class="footer-nav" aria-label="Footer">
+      <a href="index.html#top">Home</a>
+      <a href="our-story.html">Our Story</a>
+      <a href="photos.html">Photos</a>
+      <a href="results.html">Results</a>
+      <button type="button" class="footer-cookie-btn cookie-preferences-btn">Cookie Preferences</button>
+    </nav>
+  </div>
+  <div class="wrap"><p class="footer-credit">Website by <a href="http://casalis.co.uk/" target="_blank" rel="noopener">George Casalis de Pury</a></p></div>
+</footer>
+
+<div class="chart-tip" id="chart-tip" role="tooltip" hidden></div>
+
+<script>
+/* RESULTS-DATA:START */
+const RACES = [{"year":2015,"km":10,"rows":[[1,"Julian Manning","M","Veteran",null,"",1,2290.3,null,"47"],[2,"Gary Armstrong","M","Super Veteran",null,"",2,2458.4,null,"3"],[3,"Tom Frost","M","Veteran",null,"",3,2469.3,null,"28"],[4,"Richard Millard","M","Super Veteran",null,"",4,2622.5,null,"52"],[5,"Daniel Goddard","M","Senior",null,"",5,2652.8,null,"33"],[6,"Paul Welch","M","Veteran",null,"",6,2658.8,null,"85"],[7,"Chris Crowe","M","Veteran",null,"",7,2691.5,null,"17"],[8,"Jason Stares","M","Senior",null,"",8,2702.3,null,"76"],[9,"Jamie Smith","M","Veteran",null,"",9,2705.1,null,"74"],[10,"Dave Lovell","M","Veteran",null,"",10,2710.7,null,"43"],[11,"P Hoy","","",null,"",null,2743.7,null,"97"],[12,"Philip Scrase","M","Veteran",null,"",11,2800.7,null,"72"],[13,"Clive Hutchinson","M","Super Veteran",null,"",12,2807.2,null,"39"],[14,"Antony Rose","M","Veteran",null,"",13,2811.4,null,"67"],[15,"Graeme Dobson","M","Veteran",null,"",14,2829.9,null,"21"],[16,"Thomas Price","M","Junior",null,"",15,2838.1,null,"62"],[17,"Freddie Crossley","M","Senior",null,"",16,2864.6,null,"16"],[18,"Jono Marval","M","Senior",null,"",17,2867.7,null,"48"],[19,"Simon Toms","M","Veteran",null,"",18,2877.9,null,"81"],[20,"Dan Cleife","M","Veteran",null,"",19,2903.7,null,"11"],[21,"Matt Clements","M","Senior",null,"",20,2941.7,null,"12"],[22,"Graham Excell","M","Veteran",null,"",21,2996.3,null,"23"],[23,"Simon Gambie","M","Veteran",null,"",22,3002.1,null,"29"],[24,"David Magee","M","Veteran",null,"",23,3056.5,null,"46"],[25,"Henry Johnson","M","Senior",null,"",24,3079.7,null,"41"],[26,"Charlie Luckin","M","Veteran",null,"",25,3099.1,null,"44"],[27,"Celia Fox-Robinson","F","Veteran",null,"",1,3103.7,null,"26"],[28,"Anita Crawley","F","Super Veteran",null,"",2,3111.8,null,"14"],[29,"Catherine Alderton","F","Veteran",null,"",3,3155.6,null,"2"],[30,"Anuschka Perold","F","Veteran",null,"",4,3185.2,null,"60"],[31,"Peter Garrett","M","Senior",null,"",26,3208.1,null,"31"],[32,"Doug Mcleod","M","Veteran",null,"",27,3250.3,null,"50"],[33,"David Tester","M","Veteran",null,"",28,3271.2,null,"78"],[34,"Daniel Ball","M","Senior",null,"",29,3287.0,null,"20"],[35,"Dave Rose","M","Veteran",null,"",30,3332.5,null,"66"],[36,"Danny Williams","M","Veteran",null,"",31,3336.1,null,"88"],[37,"Gary Mckawley","M","Veteran",null,"",32,3351.9,null,"49"],[38,"Robert Gould","M","Veteran",null,"",33,3382.6,null,"34"],[39,"Zelda Williamson","F","Veteran",null,"",5,3390.0,null,"89"],[40,"Sarah Walker","F","Veteran",null,"",6,3400.9,null,"84"],[41,"Darren Hansford","M","Veteran",null,"",34,3428.8,null,"37"],[42,"Danny Rowland","M","Veteran",null,"",35,3449.5,null,"71"],[43,"Catie Pettit","F","Veteran",null,"",7,3465.3,null,"61"],[44,"Joanna Tester","F","Veteran",null,"",8,3473.5,null,"79"],[45,"Jennifer Shackleton","F","Senior",null,"",9,3503.7,null,"73"],[46,"Josh Ohalloran","M","Junior",null,"",36,3508.0,null,"54"],[47,"Michael Stares","M","Super Veteran",null,"",37,3510.4,null,"75"],[48,"Mary Hancox","F","Veteran",null,"",10,3512.5,null,"35"],[49,"Claire Overvoorde","F","Veteran",null,"",11,3514.4,null,"57"],[50,"Lisa-Marie Peckover","F","Senior",null,"",12,3527.4,null,"59"],[51,"M Butler","F","Super Veteran",null,"",13,3548.3,null,"90"],[52,"Roger Pearce","M","Super Veteran",null,"",38,3591.8,null,"58"],[53,"Cara Garrett","F","Senior",null,"",14,3613.7,null,"30"],[54,"Carly Ashley","F","Veteran",null,"",15,3657.9,null,"4"],[55,"Mark Brown","M","Veteran",null,"",39,3681.8,null,"7"],[56,"Sian Dunkley","F","Veteran",null,"",16,3710.2,null,"22"],[57,"Veronica Folkard","F","Senior",null,"",17,3727.8,null,"25"],[58,"Stuart Rowland","M","Veteran",null,"",40,3756.2,null,"70"],[59,"Sarah Ritchie","F","Veteran",null,"",18,3778.4,null,"64"],[60,"Adrian Ritchie","M","Veteran",null,"",41,3781.8,null,"63"],[61,"Nicki Rose-White","F","Veteran",null,"",19,3801.7,null,"68"],[62,"K Silvester","","",null,"",null,3821.3,null,"99"],[63,"Rebecca West","F","Senior",null,"",20,3825.8,null,"86"],[64,"Trevor Wilkins","M","Veteran",null,"",42,3830.1,null,"87"],[65,"L Christie","","",null,"",null,3833.4,null,"100"],[66,"Claire Townley","F","Veteran",null,"",21,3845.8,null,"83"],[67,"Andrew Townley","M","Veteran",null,"",43,3850.2,null,"82"],[68,"Steven Oldfield","M","Veteran",null,"",44,3856.3,null,"55"],[69,"Kate Rowland","F","Veteran",null,"",22,3877.3,null,"69"],[70,"Steve Hutt","M","Veteran",null,"",45,3894.1,null,"40"],[71,"J Woodman","","",null,"",null,3915.5,null,"96"],[72,"James Brighton","M","Veteran",null,"",46,3981.4,null,"6"],[73,"Claire Clarke","F","Veteran",null,"",23,4059.5,null,"10"],[74,"Kate Magee","F","Veteran",null,"",24,4083.6,null,"45"],[75,"Linden Hart","M","Super Veteran",null,"",47,4156.7,null,"38"],[76,"Edwina Giddings","F","Veteran",null,"",25,4194.5,null,"32"],[77,"Mark Ohalloran","M","Veteran",null,"",48,4213.2,null,"53"],[78,"Penny Taylor","F","Senior",null,"",26,4269.9,null,"77"],[79,"Grace Brumhill","F","Senior",null,"",27,4467.7,null,"8"],[80,"Jeanie Brumhill","F","Veteran",null,"",28,4469.1,null,"9"],[81,"P Lucian","","",null,"",null,4523.4,null,"98"],[82,"Kelly Cruddas","F","Senior",null,"",29,5401.5,null,"18"],[83,"Michael Dales","M","Veteran",null,"",49,5405.9,null,"19"]]},{"year":2016,"km":10,"rows":[[1,"Julian Manning","M","Veteran 40",null,"",1,2265.2,null,"37"],[2,"Matthew Houlberg","M","Senior",null,"",2,2459.4,null,"80"],[3,"Gary Armstrong","M","Senior",null,"",3,2461.7,null,"47"],[4,"Matthew Cheyney","M","Senior",null,"",4,2509.5,null,"61"],[5,"Alex Hammick","M","Senior",null,"",5,2579.5,null,"65"],[6,"Tom Frost","M","Veteran 45",null,"",6,2623.8,null,"51"],[7,"Clive Hutchinson","M","Veteran 50+",null,"",7,2650.2,null,"22"],[8,"Mark Hargreaves","M","Veteran 50+",null,"",8,2664.6,null,"32"],[9,"David Lovell","M","Veteran 40",null,"",9,2702.9,null,"81"],[10,"Chris Gibson","M","Veteran 40",null,"",10,2704.2,null,"16"],[11,"Chris Crowe","M","Veteran 40",null,"",11,2710.6,null,"54"],[12,"Ken Houlberg","M","Veteran 45",null,"",12,2723.4,null,"79"],[13,"Daniel Cleife","M","Veteran 40",null,"",13,2738.4,null,"30"],[14,"Paul Welch","M","Veteran 40",null,"",14,2811.3,null,"28"],[15,"Mat Sibley","M","Veteran 40",null,"",15,2814.8,null,"64"],[16,"Matt Clements","M","Senior",null,"",16,2823.1,null,"7"],[17,"Ed Davies","M","Veteran 40",null,"",17,2836.9,null,"9"],[18,"Francis Luard","M","Senior",null,"",18,2864.2,null,"4"],[19,"Eddie Vincent","M","Senior",null,"",19,2865.1,null,"3"],[20,"Jonathan Marval","M","Veteran 40",null,"",20,2883.4,null,"42"],[21,"Michael Jones","M","Senior",null,"",21,2911.9,null,"18"],[22,"Ben Marsh","M","Veteran 40",null,"",22,2929.6,null,"38"],[23,"Stuart Ingham","M","Senior",null,"",23,2990.7,null,"21"],[24,"Paul Saunders","M","Veteran 45",null,"",24,3094.9,null,"27"],[25,"Celia Fox-Robinson","F","Veteran 40",null,"",1,3112.9,null,"62"],[26,"Tom Soper","M","Veteran 40",null,"",25,3120.2,null,"5"],[27,"David Magee","M","Veteran 45",null,"",26,3169.3,null,"73"],[28,"Anuschka Beneke","F","Veteran 40",null,"",2,3179.3,null,"2"],[29,"Edward Waterhouse","M","Senior",null,"",27,3206.9,null,"83"],[30,"David Tester","M","Veteran 40",null,"",28,3224.5,null,"63"],[31,"Mark Lee","M","Veteran 40",null,"",29,3231.9,null,"34"],[32,"Andrew Fleck","M","Veteran 45",null,"",30,3239.2,null,"17"],[33,"Diane Pitcher","F","Veteran 40",null,"",3,3243.5,null,"67"],[34,"Darren Hansford","M","Veteran 45",null,"",31,3276.2,null,"1"],[35,"Catie Pettit","F","Senior",null,"",4,3286.7,null,"33"],[36,"Will Galgey","M","Senior",null,"",32,3289.0,null,"45"],[37,"Hugo Hardman","M","Veteran 50+",null,"",33,3290.2,null,"46"],[38,"Mike Morrison","M","Veteran 40",null,"",34,3307.5,null,"76"],[39,"Zelda Williamson","F","Veteran 40",null,"",5,3326.0,null,"20"],[40,"Charlie Luckin","M","Veteran 40",null,"",35,3335.2,null,"10"],[41,"David Dudley-Jones","M","Veteran 40",null,"",36,3362.0,null,"57"],[42,"Danny Rowland","M","Veteran 40",null,"",37,3367.5,null,"55"],[43,"Doug Mcleod","M","Veteran 40",null,"",38,3451.4,null,"26"],[44,"Rowena Gordon","F","Senior",null,"",6,3458.0,null,"19"],[45,"Simon Hill","M","Senior",null,"",39,3476.2,null,"60"],[46,"Paul Hallowell","M","Veteran 40",null,"",40,3480.7,null,"35"],[47,"Clift Pay","M","Veteran 50+",null,"",41,3546.3,null,"78"],[48,"Alexander Hart","M","Veteran 40",null,"",42,3628.1,null,"69"],[49,"Jeremy Woodall","M","Veteran 45",null,"",43,3636.4,null,"31"],[50,"Robert Gould","M","Veteran 40",null,"",44,3649.6,null,"6"],[51,"Cyril Dubouloz","M","Veteran 40",null,"",45,3652.6,null,"68"],[52,"Kate Rowland","F","Veteran 40",null,"",7,3655.7,null,"56"],[53,"Marie Haag","F","Senior",null,"",8,3665.6,null,"82"],[54,"Angela Hughes","F","Senior",null,"",9,3673.2,null,"41"],[55,"Michael Stares","M","Veteran 50+",null,"",46,3677.9,null,"72"],[56,"Robert Clark","M","Veteran 50+",null,"",47,3680.7,null,"43"],[57,"Shaun Hughes","M","Senior",null,"",48,3684.9,null,"40"],[58,"Lisa-Marie Peckover","F","Senior",null,"",10,3692.5,null,"48"],[59,"Vibeke Clark","F","Veteran 40",null,"",11,3696.4,null,"44"],[60,"Gemma Clements","F","Senior",null,"",12,3715.3,null,"101"],[61,"Billy Clegg","M","Veteran 40",null,"",49,3720.4,null,"77"],[62,"Sarah Ritchie","F","Veteran 50+",null,"",13,3777.8,null,"12"],[63,"Adrian Ritchie","M","Veteran 45",null,"",50,3779.0,null,"13"],[64,"Andrea Cox","F","Veteran 50+",null,"",14,3804.1,null,"36"],[65,"Trevor Wilkins","M","Veteran 40",null,"",51,3811.9,null,"50"],[66,"Charlotte Higham","F","Senior",null,"",15,3820.5,null,"66"],[67,"Alexandra Rowland","F","Veteran 40",null,"",16,3905.7,null,"59"],[68,"Mrs Foster","F","Veteran 40",null,"",17,3966.3,null,"100"],[69,"Sarah Archer","F","Veteran 50+",null,"",18,3967.5,null,"39"],[70,"Andrew Bussy","M","Veteran 45",null,"",52,4029.4,null,"84"],[71,"Stuart Giddings","M","Veteran 45",null,"",53,4047.5,null,"24"],[72,"Gordon Birdwood","M","Veteran 50+",null,"",54,4054.2,null,"49"],[73,"Linden Hart","M","Veteran 50+",null,"",55,4120.4,null,"70"],[74,"Joanna Thompson","F","Veteran 45",null,"",19,4257.9,null,"53"],[75,"Paul Maskell","M","Veteran 40",null,"",56,4337.8,null,"74"],[76,"Emily Maskell","M","Veteran 40",null,"",57,4340.3,null,"75"],[77,"Andrew Gilbert","M","Senior",null,"",58,4341.5,null,"71"]]},{"year":2018,"km":10,"rows":[[1,"Julian Manning","M","40-49",null,"",1,2208.1,null,"71"],[2,"Neil Williams","M","Senior",null,"",2,2318.9,null,"78"],[3,"Gary Armstrong","M","Senior",null,"",3,2379.6,null,"60"],[4,"Tom Corcoran","M","40-49",null,"",4,2394.7,null,"26"],[5,"Rob Wilson","M","40-49",null,"",5,2445.1,null,"11"],[6,"Roland Hill","M","Senior",null,"",6,2468.5,null,"76"],[7,"Ruud Jonkers","M","Senior",null,"",7,2479.2,null,"85"],[8,"Edward Kurland","M","Senior",null,"",8,2483.6,null,"101"],[9,"Tom Kurland","M","Senior",null,"",9,2488.7,null,"102"],[10,"Mike Newnham","M","Senior",null,"",10,2524.5,null,"3"],[11,"Clive Hutchinson","M","50-59",null,"",11,2529.3,null,"7"],[12,"David Lovell","M","40-49",null,"",12,2616.1,null,"94"],[13,"Daniel Cleife","M","40-49",null,"",13,2655.3,null,"93"],[14,"Daniel Quemby","M","40-49",null,"",14,2667.8,null,"77"],[15,"Dan Starkey","M","Senior",null,"",15,2722.8,null,"33"],[16,"Kev Gale","M","50-59",null,"",16,2730.3,null,"65"],[17,"Freddie Crosley","M","Senior",null,"",17,2734.9,null,"109"],[18,"Jason Spry","M","40-49",null,"",18,2740.2,null,"38"],[19,"Matt Clemens","M","Senior",null,"",19,2759.4,null,"108"],[20,"Eddie Vincent","M","40-49",null,"",20,2769.4,null,"1"],[21,"Nicholas Minter","M","Senior",null,"",21,2774.5,null,"44"],[22,"Jay Smith","M","Senior",null,"",22,2789.0,null,"20"],[23,"Jon Hutchings","M","50-59",null,"",23,2794.3,null,"37"],[24,"Mat Sibley","M","40-49",null,"",24,2818.2,null,"25"],[25,"Daniel Shawyer","M","Senior",null,"",25,2847.3,null,"12"],[26,"Frank Luard","M","Senior",null,"",26,2852.0,null,"5"],[27,"Nick Fulstow","M","40-49",null,"",27,2854.9,null,"66"],[28,"George Hart","M","Senior",null,"",28,2863.1,null,"74"],[29,"Adam Jay","M","40-49",null,"",29,2866.3,null,"58"],[30,"Ryan Matthews","M","40-49",null,"",30,2868.6,null,"62"],[31,"Toby Drought","M","40-49",null,"",31,2872.1,null,"39"],[32,"Billy Clegg","M","40-49",null,"",32,2877.0,null,"69"],[33,"Tom Allen","M","Senior",null,"",33,2880.9,null,"47"],[34,"Stephen Teape","M","40-49",null,"",34,2913.3,null,"75"],[35,"Jono Marval","M","40-49",null,"",35,2924.4,null,"40"],[36,"Guy Munnoch","M","60+",null,"",36,2950.3,null,"42"],[37,"Chris Hand","M","50-59",null,"",37,2953.9,null,"24"],[38,"Adam Crook","M","Senior",null,"",38,2958.4,null,"54"],[39,"Gavin Lacey","M","50-59",null,"",39,2969.4,null,"10"],[40,"Lisa-Marie Peckover","F","Senior",null,"",1,3006.2,null,"61"],[41,"William Barker","M","Senior",null,"",40,3040.2,null,"50"],[42,"Stuart Ingham","M","Senior",null,"",41,3098.8,null,"28"],[43,"Rob Clark","M","50-59",null,"",42,3105.5,null,"15"],[44,"Lizzie Peters","F","Senior",null,"",2,3119.4,null,"103"],[45,"Andy Fleck","M","50-59",null,"",43,3123.8,null,"41"],[46,"Dave Rose","M","40-49",null,"",44,3127.0,null,"8"],[47,"Steve Berry","M","40-49",null,"",45,3148.0,null,"104"],[48,"Sarah Stovell","F","50-59",null,"",3,3164.7,null,"17"],[49,"Will Galgey","M","40-49",null,"",46,3168.2,null,"9"],[50,"Peter Garrett","M","Senior",null,"",47,3179.2,null,"82"],[51,"David Magee","M","40-49",null,"",48,3211.3,null,"88"],[52,"David Tester","M","40-49",null,"",49,3220.1,null,"84"],[53,"Andrew Tarrant","M","50-59",null,"",50,3223.6,null,"18"],[54,"Matthew Horsfield","M","Senior",null,"",51,3249.3,null,"29"],[55,"Anne Leggett","F","50-59",null,"",4,3257.4,null,"83"],[56,"Andrew Hook","M","Senior",null,"",52,3272.8,null,"48"],[57,"Christopher Dare","M","40-49",null,"",53,3303.9,null,"70"],[58,"Rowenna Gordon","F","Senior",null,"",5,3317.2,null,"49"],[59,"Danny Rowland","M","40-49",null,"",54,3320.8,null,"73"],[60,"Paul Maskell","M","40-49",null,"",55,3328.3,null,"46"],[61,"Jose Barba Garcia","M","Senior",null,"",56,3364.8,null,"91"],[62,"Joel Tanzer","M","Senior",null,"",57,3371.8,null,"19"],[63,"Stephen West","M","Senior",null,"",58,3375.5,null,"53"],[64,"Benjamin Clarke","M","Senior",null,"",59,3378.1,null,"56"],[65,"Jamie Lewis","M","40-49",null,"",60,3381.4,null,"107"],[66,"Belinda Lewis-Jones","F","Senior",null,"",6,3394.2,null,"32"],[67,"Adrian Ritchie","M","40-49",null,"",61,3400.1,null,"52"],[68,"Jeremy Woodall","M","40-49",null,"",62,3433.4,null,"6"],[69,"Robert Gould","M","40-49",null,"",63,3436.0,null,"22"],[70,"Charlie Luckin","M","40-49",null,"",64,3442.1,null,"96"],[71,"Graham Banning","M","50-59",null,"",65,3452.1,null,"21"],[72,"Katie Higham","F","40-49",null,"",7,3500.8,null,"89"],[73,"Catherine Willey","F","Senior",null,"",8,3504.4,null,"81"],[74,"Doug Mccloud","M","40-49",null,"",66,3508.3,null,"35"],[75,"Dunstan Rickard","M","40-49",null,"",67,3514.5,null,"95"],[76,"Alex Worrall","M","40-49",null,"",68,3548.6,null,"31"],[77,"Sarah Galgey","F","40-49",null,"",9,3552.4,null,"27"],[78,"Catherine Arnold","F","Senior",null,"",10,3556.4,null,"23"],[79,"Vi Clark","F","40-49",null,"",11,3574.5,null,"16"],[80,"Sarah Walker","F","Senior",null,"",12,3579.2,null,"64"],[81,"Elizabeth Morrison","F","40-49",null,"",13,3646.8,null,"13"],[82,"Lee Jordan","M","40-49",null,"",69,3657.7,null,"59"],[83,"Michael Doran","M","60+",null,"",70,3759.3,null,"90"],[84,"Kate Rowland","F","40-49",null,"",14,3775.8,null,"51"],[85,"Sarah Haynes","F","Senior",null,"",15,3795.6,null,"43"],[86,"Michael Stares","M","60+",null,"",71,3800.7,null,"63"],[87,"Georgina Fraser","F","Senior",null,"",16,3820.3,null,"97"],[88,"Amanda Ammar","F","40-49",null,"",17,3832.1,null,"86"],[89,"Trevor Wilkins","M","40-49",null,"",72,3846.4,null,"36"],[90,"Sue Burley","F","50-59",null,"",18,3872.2,null,"57"],[91,"Ian Reed","M","50-59",null,"",73,3875.7,null,"72"],[92,"John Clayton-Wright","M","50-59",null,"",74,4007.9,null,"80"],[93,"Gracie Brumhill","F","Senior",null,"",19,4089.9,null,"34"],[94,"Julia Revill","F","60+",null,"",20,4256.6,null,"79"],[95,"Sarah Mackie","F","Senior",null,"",21,4282.5,null,"92"],[96,"Pema Brunet","F","40-49",null,"",22,4305.8,null,"87"],[97,"Annie Berry","F","Senior",null,"",23,4351.1,null,"68"],[98,"Debbie Fulstow","F","Senior",null,"",24,4370.5,null,"67"],[99,"Joanna Thompson","F","40-49",null,"",25,4468.5,null,"45"],[100,"Jenny Worrall","F","40-49",null,"",26,4847.9,null,"30"],[101,"Sam Smart","M","Senior",null,"",75,5011.7,null,"105"],[102,"Rachel Curphey","F","Senior",null,"",27,5017.9,null,"106"],[103,"Teresa Encke","F","60+",null,"",28,5660.0,null,"4"]]},{"year":2019,"km":10,"rows":[[1,"Julian Manning","M","40-49",null,"",1,2336.8,null,"55"],[2,"Neil Williams","M","25-39",null,"",2,2390.8,null,"75"],[3,"Gary Armstrong","M","25-39",null,"",3,2470.8,null,"6"],[4,"Rob Wilson","M","40-49",null,"",4,2491.3,null,"21"],[5,"Ruud Jonkers","M","25-39",null,"",5,2504.9,null,"49"],[6,"Chris Wingham","M","40-49",null,"",6,2520.4,null,"79"],[7,"Mike Newnham","M","40-49",null,"",7,2554.1,null,"68"],[8,"Clive Hutchinson","M","50-59",null,"",8,2582.2,null,"62"],[9,"Chris Crowe","M","40-49",null,"",9,2620.6,null,"89"],[10,"James Collier","M","25-39",null,"",10,2651.3,null,"71"],[11,"Kevin Gale","M","50-59",null,"",11,2678.4,null,"77"],[12,"Dan Starkey","M","25-39",null,"",12,2705.3,null,"31"],[13,"Eddie Vincent","M","40-49",null,"",13,2723.7,null,"9"],[14,"Daniel Cleife","M","40-49",null,"",14,2770.5,null,"91"],[15,"Daniel Shawyer","M","40-49",null,"",15,2782.1,null,"76"],[16,"Andrew Hook","M","25-39",null,"",16,2828.0,null,"23"],[17,"Mark Hargreaves","M","60-69",null,"",17,2838.6,null,"51"],[18,"Gavin Lacey","M","50-59",null,"",18,2850.4,null,"17"],[19,"Mat Sibley","M","40-49",null,"",19,2856.0,null,"10"],[20,"Adam Jay","M","40-49",null,"",20,2905.9,null,"14"],[21,"Jonathan Marval","M","40-49",null,"",21,2913.6,null,"85"],[22,"Rob Moore","M","40-49",null,"",22,2939.9,null,"43"],[23,"Frank Luard","M","40-49",null,"",23,2964.9,null,"7"],[24,"Sarah Zacal","F","25-39",null,"",1,2978.3,null,"24"],[25,"Billy Clegg","M","40-49",null,"",24,2985.6,null,"64"],[26,"Tom Allen","M","25-39",null,"",25,2997.3,null,"30"],[27,"Matthew Madill","M","25-39",null,"",26,3024.9,null,"38"],[28,"Celia Fox-Robinson","F","40-49",null,"",2,3031.1,null,"58"],[29,"Lisa-Marie Peckover","F","25-39",null,"",3,3041.0,null,"5"],[30,"Suzanne Richardson","F","40-49",null,"",4,3068.3,null,"25"],[31,"Andrew Tarrant","M","50-59",null,"",27,3084.3,null,"54"],[32,"Jay Smith","M","15-24",null,"",28,3114.7,null,"96"],[33,"Felix Tanzer","M","25-39",null,"",29,3120.0,null,"83"],[34,"Catherine Arnold","F","25-39",null,"",5,3130.0,null,"27"],[35,"Toby Drought","M","40-49",null,"",30,3135.1,null,"70"],[36,"Richard Moore","M","50-59",null,"",31,3146.9,null,"16"],[37,"Christopher Dare","M","40-49",null,"",32,3157.6,null,"67"],[38,"William Barker","M","25-39",null,"",33,3165.2,null,"2"],[39,"David Tester","M","40-49",null,"",34,3187.3,null,"87"],[40,"Joel Tanzer","M","25-39",null,"",35,3192.1,null,"78"],[41,"David Magee","M","40-49",null,"",36,3220.7,null,"80"],[42,"Belinda Lewis-Jones","F","40-49",null,"",6,3259.4,null,"28"],[43,"Nick Ammar","M","40-49",null,"",37,3323.0,null,"98"],[44,"Jamie Higgens","M","25-39",null,"",38,3364.7,null,"44"],[45,"Deborah Hall","F","40-49",null,"",7,3378.3,null,"20"],[46,"David Rose","M","40-49",null,"",39,3389.6,null,"8"],[47,"Robin Garton","M","40-49",null,"",40,3405.6,null,"101"],[48,"Paul Jackson","M","40-49",null,"",41,3410.0,null,"41"],[49,"Marishelle Butler","F","50-59",null,"",8,3426.7,null,"107"],[50,"Rowena Gordon","F","25-39",null,"",9,3439.3,null,"1"],[51,"Alex Temple","M","40-49",null,"",42,3442.7,null,"69"],[52,"Mike Morrison","M","40-49",null,"",43,3448.5,null,"102"],[53,"Victoria Mcfarlin","F","40-49",null,"",10,3452.7,null,"92"],[54,"James Mcfarlin","M","40-49",null,"",44,3456.1,null,"93"],[55,"Jodie Bruce","F","25-39",null,"",11,3479.4,null,"74"],[56,"Sam Riley","M","25-39",null,"",45,3484.1,null,"73"],[57,"Graham Banning","M","50-59",null,"",46,3492.3,null,"57"],[58,"Fiona Prudent","F","40-49",null,"",12,3496.9,null,"56"],[59,"Charlie Lutchin","M","40-49",null,"",47,3538.8,null,"108"],[60,"Slavena Jensen","F","40-49",null,"",13,3543.2,null,"50"],[61,"Hanah Lacey","F","25-39",null,"",14,3548.0,null,"33"],[62,"Katie Higham","F","40-49",null,"",15,3614.8,null,"12"],[63,"Duncan Higham","M","25-39",null,"",48,3619.1,null,"63"],[64,"Simon Elliot","M","40-49",null,"",49,3659.9,null,"48"],[65,"Greta Armstrong","F","50-59",null,"",16,3691.2,null,"42"],[66,"Danny Rowland","M","40-49",null,"",50,3702.8,null,"86"],[67,"Jules Lewis-Jones","M","40-49",null,"",51,3705.8,null,"39"],[68,"Mark Tyler","M","40-49",null,"",52,3709.6,null,"45"],[69,"Helen Baker","F","50-59",null,"",17,3780.2,null,"72"],[70,"Guy Peeke-Vout","M","50-59",null,"",53,3804.0,null,"61"],[71,"Julie Whitney","F","50-59",null,"",18,3869.7,null,"18"],[72,"Jonathan Batey","M","60-69",null,"",54,3875.7,null,"90"],[73,"James Brighton","M","40-49",null,"",55,3880.2,null,"82"],[74,"Michael Stares","M","70+",null,"",56,3896.7,null,"81"],[75,"Sarah Mackie","F","25-39",null,"",19,3902.5,null,"84"],[76,"Melissa Clegg","F","40-49",null,"",20,3907.6,null,"65"],[77,"Sarah Galgey","F","40-49",null,"",21,3914.0,null,"99"],[78,"Trevor Wilkins","M","40-49",null,"",57,3948.9,null,"34"],[79,"Carly Ashley","F","40-49",null,"",22,3965.1,null,"19"],[80,"Sarah Ritchie","F","50-59",null,"",23,4047.0,null,"59"],[81,"Adrian Ritchie","M","50-59",null,"",58,4050.7,null,"60"],[82,"Kate Rowland","F","40-49",null,"",24,4095.2,null,"103"],[83,"Virginia Ripley","F","50-59",null,"",25,4185.1,null,"95"],[84,"Charlie Temple","F","40-49",null,"",26,4196.9,null,"104"],[85,"Anna Curd","F","50-59",null,"",27,4207.0,null,"46"],[86,"Shaun Curd","M","50-59",null,"",59,4209.5,null,"47"],[87,"Samantha Thompson","F","25-39",null,"",28,4255.5,null,"94"],[88,"Michael Doran","M","70+",null,"",60,4521.0,null,"13"],[89,"Joanne Hopkins","F","40-49",null,"",29,4575.2,null,"97"],[90,"Jackie Brady","F","40-49",null,"",30,4577.3,null,"4"],[91,"Stefanie Metcalf","F","25-39",null,"",31,4611.8,null,"105"],[92,"David Dudley-Jones","M","40-49",null,"",61,4614.5,null,"106"],[93,"Sam Smart","M","60-69",null,"",62,4701.1,null,"88"],[94,"Jacqueline Hands","F","60-69",null,"",32,4872.2,null,"53"],[95,"Alice Bird","F","50-59",null,"",33,5144.9,null,"40"],[96,"Debbie Marks","F","50-59",null,"",34,5158.2,null,"37"]]},{"year":2021,"km":10,"rows":[[1,"Julian Manning","M","40-49",null,"",1,2327.9,null,"1"],[2,"Mike Newnham","M","40-49",null,"",2,2382.5,null,"54"],[3,"Andy Simpson","M","40-49",null,"",3,2436.7,null,"57"],[4,"Rob Wilson","M","40-49",null,"",4,2468.4,null,"45"],[5,"Martin Mckinlay","M","30-39",null,"",5,2474.1,null,"80"],[6,"Alex Hammick","M","30-39",null,"",6,2543.4,null,"23"],[7,"Steve Edwards","M","40-49",null,"",7,2560.3,null,"71"],[8,"Eddie Vincent","M","40-49",null,"",8,2588.5,null,"5"],[9,"Kevin Gale","M","50-59",null,"",9,2604.7,null,"52"],[10,"Clive Hutchinson","M","50-59",null,"",10,2611.5,null,"50"],[11,"Gary Armstrong","M","30-39",null,"",11,2661.6,null,"91"],[12,"Nicholas Webb","M","40-49",null,"",12,2682.5,null,"58"],[13,"Andrew Hook","M","30-39",null,"",13,2729.6,null,"28"],[14,"Dan Cleife","M","40-49",null,"",14,2783.4,null,"97"],[15,"Mat Sibley","M","40-49",null,"",15,2834.0,null,"100"],[16,"Jason Stares","M","30-39",null,"",16,2890.3,null,"63"],[17,"Adam Jay","M","40-49",null,"",17,2932.6,null,"21"],[18,"Billy Clegg","M","40-49",null,"",18,2970.0,null,"76"],[19,"Andrew Chapell","M","50-59",null,"",19,2981.5,null,"74"],[20,"Kirsty Aked","F","40-49",null,"",1,2986.0,null,"42"],[21,"Paul Welch","M","40-49",null,"",20,2989.7,null,"18"],[22,"Tony Drought","M","40-49",null,"",21,2998.5,null,"70"],[23,"Nicola Thomas","F","40-49",null,"",2,3013.0,null,"86"],[24,"Paul Jackson","M","50-59",null,"",22,3031.9,null,"38"],[25,"Jamie Borman","M","50-59",null,"",23,3034.9,null,"3"],[26,"Martyn Poore","M","30-39",null,"",24,3039.3,null,"56"],[27,"Ed Warner","M","50-59",null,"",25,3050.3,null,"72"],[28,"Joanna Tester","F","40-49",null,"",3,3069.7,null,"85"],[29,"David Tester","M","40-49",null,"",26,3072.9,null,"84"],[30,"Angus Wells","M","50-59",null,"",27,3087.6,null,"47"],[31,"Laura Dunkley","F","30-39",null,"",4,3090.0,null,"81"],[32,"Mark Lee","M","40-49",null,"",28,3109.6,null,"90"],[33,"Nick Stileman","M","40-49",null,"",29,3114.4,null,"29"],[34,"Graham Bowpritt","M","50-59",null,"",30,3122.1,null,"95"],[35,"Jamie Taylor","M","40-49",null,"",31,3133.2,null,"39"],[36,"Guy Munnoch","M","60-69",null,"",32,3144.7,null,"32"],[37,"Belinda Lewis-Jones","F","40-49",null,"",5,3150.3,null,"15"],[38,"Sam Sargant","M","30-39",null,"",33,3175.0,null,"11"],[39,"Nicholas Higham","M","30-39",null,"",34,3179.2,null,"16"],[40,"Sam Phillips","M","40-49",null,"",35,3183.0,null,"79"],[41,"Darron Jolliffe","M","50-59",null,"",36,3190.1,null,"37"],[42,"Julian Pringle","M","50-59",null,"",37,3209.4,null,"73"],[43,"Helen Baker","F","50-59",null,"",6,3224.6,null,"12"],[44,"Mike Morrison","M","40-49",null,"",38,3233.4,null,"14"],[45,"Joel Tanzer","M","30-39",null,"",39,3239.1,null,"68"],[46,"Ben Woolf","M","30-39",null,"",40,3250.5,null,"78"],[47,"Tom Allen","M","30-39",null,"",41,3287.1,null,"87"],[48,"Ian Jenkins","M","30-39",null,"",42,3311.0,null,"82"],[49,"Dave Rose","M","40-49",null,"",43,3316.9,null,"88"],[50,"Hugo Hardman","M","50-59",null,"",44,3361.2,null,"77"],[51,"Jake Reynolds","M","20-29",null,"",45,3376.9,null,"61"],[52,"Carl Bescoby","M","20-29",null,"",46,3380.0,null,"66"],[53,"Martyn Cattermole","M","40-49",null,"",47,3396.5,null,"65"],[54,"Dan Goddard","M","30-39",null,"",48,3400.6,null,"64"],[55,"Andy Fleck","M","50-59",null,"",49,3442.1,null,"40"],[56,"Marichelle Butler","F","50-59",null,"",7,3446.6,null,"22"],[57,"Graham Banning","M","50-59",null,"",50,3458.3,null,"99"],[58,"Lee Jordan","M","40-49",null,"",51,3519.8,null,"7"],[59,"Anne Atherton","F","50-59",null,"",8,3527.3,null,"35"],[60,"Nick Fulstow","M","40-49",null,"",52,3530.6,null,"69"],[61,"Terry Aked","M","40-49",null,"",53,3544.6,null,"36"],[62,"Alice Lane","F","50-59",null,"",9,3575.9,null,"59"],[63,"Kate Higham","F","40-49",null,"",10,3593.1,null,"8"],[64,"Anne Williams","F","30-39",null,"",11,3619.9,null,"46"],[65,"Jennifer Tankard","F","50-59",null,"",12,3635.7,null,"34"],[66,"Sarah Mackie","F","30-39",null,"",13,3752.5,null,"62"],[67,"Abbie Tarrant","F","20-29",null,"",14,3755.9,null,"93"],[68,"Beatrice Finch","F","30-39",null,"",15,3760.2,null,"26"],[69,"Jungkeum Choe","F","30-39",null,"",16,3788.7,null,"83"],[70,"Charley Price","F","20-29",null,"",17,3824.2,null,"27"],[71,"Julie Whitney","F","50-59",null,"",18,3849.1,null,"10"],[72,"Danny Rowland","M","50-59",null,"",54,3853.8,null,"96"],[73,"Ann Parker","F","50-59",null,"",19,3875.5,null,"75"],[74,"Kat Chowns","F","30-39",null,"",20,3899.0,null,"89"],[75,"Alex Temple","M","40-49",null,"",55,3903.9,null,"4"],[76,"Amanda Simpson","F","60-69",null,"",21,3912.4,null,"53"],[77,"Carly Ashley","F","40-49",null,"",22,3927.5,null,"13"],[78,"Sarah Ritchie","F","50-59",null,"",23,3981.2,null,"41"],[79,"Karl Roberts","M","50-59",null,"",56,3987.0,null,"43"],[80,"Fleur Giles","F","30-39",null,"",24,4101.2,null,"98"],[81,"Tiffany Eneas","F","50-59",null,"",25,4191.7,null,"25"],[82,"David Dudley-Jones","M","40-49",null,"",57,4210.6,null,"2"],[83,"Clare Welch","F","40-49",null,"",26,4241.2,null,"19"],[84,"Ian Smith","M","40-49",null,"",58,4410.7,null,"33"],[85,"Virginia Ripley","F","50-59",null,"",27,4472.7,null,"20"],[86,"Helen Mackenzie","F","20-29",null,"",28,4477.7,null,"92"],[87,"Thomas Hobson","M","20-29",null,"",59,4489.6,null,"67"],[88,"Alex Tanzer","M","30-39",null,"",60,4491.5,null,"48"],[89,"Michael Stares","M","70+",null,"",61,4556.1,null,"94"]]},{"year":2022,"km":5,"rows":[[1,"Max Wilding","M","U15",null,"",1,1493.2,null,"106"],[2,"Suzanne Richardson","F","Open",null,"",1,1528.2,null,"104"],[3,"Seb Rowland","M","U15",null,"",2,1549.2,null,"115"],[4,"Harry Richard","M","Open",null,"",3,1704.6,null,"188"],[5,"Zebedee Jay","M","Open",null,"",4,1716.3,null,"105"],[6,"Sia Perold","F","U15",null,"",2,1720.4,null,"108"],[7,"George Lewis-Jones","M","U15",null,"",5,1781.1,null,"190"],[8,"Tom Ladenburg","M","Open",null,"",6,1793.5,null,"112"],[9,"Evie Tester","F","U15",null,"",3,1814.3,null,"110"],[10,"Jonathan Batey","M","Open",null,"",7,1833.7,null,"109"],[11,"Ian Smith","M","Open",null,"",8,1865.0,null,"39"],[12,"Helen Baker","F","Open",null,"",4,1929.0,null,"101"],[13,"Charlie Rowland","M","U15",null,"",9,1938.0,null,"116"],[14,"Lila Clements","F","U15",null,"",5,2019.4,null,"119"],[15,"Jody Phelps","F","Open",null,"",6,2044.3,null,"113"],[16,"Emma Thomas","F","Open",null,"",7,2084.5,null,"114"],[17,"Jethro Garton","M","Open",null,"",10,2129.0,null,"117"],[18,"Calypso Garton","F","U15",null,"",8,2143.5,null,"118"],[19,"Sophie Brunt","F","Open",null,"",9,2183.0,null,"186"],[20,"Yasmin Barlow-Mills","F","Open",null,"",10,2185.2,null,"187"],[21,"Connor Gibson","M","U15",null,"",11,2644.4,null,"194"],[22,"Florence Luard","F","U15",null,"",11,2676.3,null,"107"]]},{"year":2022,"km":10,"rows":[[1,"Julian Manning","M","40-49",null,"",1,2320.6,null,"1"],[2,"Mark Bicknell","M","40-49",null,"",2,2392.1,null,"4"],[3,"Rob Wilson","M","40-49",null,"",3,2474.1,null,"6"],[4,"Kevin Gale","M","50-59",null,"",4,2485.0,null,"35"],[5,"Gary Armstrong","M","25-39",null,"",5,2512.8,null,"46"],[6,"Lee Caiels","M","40-49",null,"",6,2540.4,null,"78"],[7,"Michael Harrison","M","25-39",null,"",7,2569.1,null,"43"],[8,"Hugo Grant","M","25-39",null,"",8,2660.7,null,"42"],[9,"Peter Coote","M","25-39",null,"",9,2698.1,null,"21"],[10,"David Noble","M","40-49",null,"",10,2709.0,null,"48"],[11,"Mat Sibley","M","50-59",null,"",11,2767.6,null,"2"],[12,"Eddie Vincent","M","40-49",null,"",12,2777.4,null,"36"],[13,"Rob Moore","M","40-49",null,"",13,2801.7,null,"31"],[14,"Dan Starkey","M","25-39",null,"",14,2806.4,null,"40"],[15,"Gavin Roberts","M","50-59",null,"",15,2821.1,null,"29"],[16,"Joanna Tester","F","40-49",null,"",1,2880.4,null,"57"],[17,"Paul Welch","M","40-49",null,"",16,2930.6,null,"22"],[18,"Richard Casalis De Pury","M","25-39",null,"",17,2990.6,null,"67"],[19,"David Tester","M","40-49",null,"",18,2994.6,null,"56"],[20,"George Casalis De Pury","M","25-39",null,"",19,3010.0,null,"64"],[21,"Lisa-Marie Peckover","F","25-39",null,"",2,3015.5,null,"45"],[22,"Tom Allen","M","25-39",null,"",20,3044.6,null,"68"],[23,"Naomi Ambrose","F","40-49",null,"",3,3053.9,null,"54"],[24,"Paul Jackson","M","50-59",null,"",21,3064.4,null,"17"],[25,"Adam Jay","M","40-49",null,"",22,3087.4,null,"34"],[26,"Rachel Atherton","F","40-49",null,"",4,3176.2,null,"53"],[27,"Michael Barker","M","25-39",null,"",23,3180.7,null,"16"],[28,"Belinda Lewis-Jones","F","40-49",null,"",5,3228.0,null,"41"],[29,"Nick Fulstow","M","40-49",null,"",24,3284.5,null,"37"],[30,"Stuart Ingham","M","25-39",null,"",25,3287.2,null,"38"],[31,"Matt Bradley","M","25-39",null,"",26,3293.4,null,"10"],[32,"Tony Drought","M","40-49",null,"",27,3300.4,null,"63"],[33,"Catie Pettit","F","40-49",null,"",6,3305.7,null,"8"],[34,"Hugo Moore","M","40-49",null,"",28,3323.0,null,"33"],[35,"Nikki Folland","F","40-49",null,"",7,3338.7,null,"47"],[36,"William Barker","M","25-39",null,"",29,3363.4,null,"13"],[37,"Kevin Scott","M","40-49",null,"",30,3372.5,null,"59"],[38,"Robin Garton","M","40-49",null,"",31,3384.0,null,"71"],[39,"Joel Tanzer","M","40-49",null,"",32,3389.3,null,"55"],[40,"Gary Mccawley","M","50-59",null,"",33,3393.8,null,"14"],[41,"Anne Atherton","F","50-59",null,"",8,3411.4,null,"7"],[42,"Tim Halliday","M","40-49",null,"",34,3417.6,null,"25"],[43,"Hugo Hardman","M","50-59",null,"",35,3468.6,null,"50"],[44,"Landa Acevedo-Scott","F","40-49",null,"",9,3485.7,null,"60"],[45,"Marishelle Butler","F","60-69",null,"",10,3492.1,null,"24"],[46,"Danny Rowland","M","40-49",null,"",36,3518.4,null,"65"],[47,"Rowena Gordon","F","25-39",null,"",11,3559.0,null,"12"],[48,"Greta Armstrong","F","60-69",null,"",12,3596.7,null,"77"],[49,"Sam Sargant","M","25-39",null,"",37,3609.9,null,"3"],[50,"Sonia Bowen-Perkins","F","40-49",null,"",13,3623.0,null,"11"],[51,"Jennifer Tankard","F","50-59",null,"",14,3648.6,null,"19"],[52,"Sarah Mackie","F","25-39",null,"",15,3669.9,null,"49"],[53,"Laura Dunkley","F","25-39",null,"",16,3744.2,null,"27"],[54,"Terry Aked","M","50-59",null,"",38,3788.1,null,"32"],[55,"Beatrice Finch","F","25-39",null,"",17,3894.2,null,"18"],[56,"Lee King","F","50-59",null,"",18,3909.6,null,"175"],[57,"Del King","M","50-59",null,"",39,3911.2,null,"74"],[58,"Emma Loveman","F","50-59",null,"",19,3933.9,null,"44"],[59,"Ann Parker","F","50-59",null,"",20,4071.6,null,"9"],[60,"Michael Stares","M","70+",null,"",40,4082.6,null,"73"],[61,"Debbie Patching","F","60-69",null,"",21,4091.6,null,"76"],[62,"Alex Temple","M","40-49",null,"",41,4232.3,null,"69"],[63,"Agnieszka Lerach","F","40-49",null,"",22,4295.2,null,"70"],[64,"Stefanie Metcalf","F","25-39",null,"",23,4388.8,null,"62"],[65,"Kate Rowland","F","40-49",null,"",24,4410.1,null,"66"],[66,"Cheryl Barker","F","50-59",null,"",25,4414.1,null,"15"]]},{"year":2023,"km":5,"rows":[[1,"Pillinger-Cork Jonathan","M","Open",null,"",1,1176.6,null,"117"],[2,"Max Wilding","M","U16",null,"",2,1409.3,null,"122"],[3,"Fred Crowe","M","U16",null,"",3,1422.4,null,"137"],[4,"Simon Bamber","M","Open",null,"",4,1675.8,null,"135"],[5,"Elliot Parkman","M","Open",null,"",5,1687.5,null,"125"],[6,"Olivia Williams","F","Open",null,"",1,1691.4,null,"119"],[7,"Suzanne Richardson","F","Open",null,"",2,1731.7,null,"118"],[8,"Sia Perold","F","U16",null,"",3,1751.1,null,"116"],[9,"Charlie Rowland","M","U16",null,"",6,1825.2,null,"134"],[10,"Erin Wilding","F","U16",null,"",4,1845.2,null,"123"],[11,"Amanda Parkman","F","Open",null,"",5,1872.0,null,"124"],[12,"Beatrice Finch","F","Open",null,"",6,1875.0,null,"127"],[13,"Reuben Budd","M","Open",null,"",7,1895.6,null,"128"],[14,"Sarah Mulcare","F","Open",null,"",7,1899.1,null,"131"],[15,"Sarah Galgey","F","Open",null,"",8,1922.2,null,"130"],[16,"Sarah Ritchie","F","Open",null,"",9,1927.8,null,"133"],[17,"Virginia Ripley","F","Open",null,"",10,2143.5,null,"129"],[18,"Florence Luard","F","U16",null,"",11,2147.8,null,"115"],[19,"Barney Marvel","M","U16",null,"",8,2278.1,null,"136"],[20,"Evelyn Halliday","F","U16",null,"",12,2524.0,null,"126"],[21,"Sophie Jordan","F","U16",null,"",13,2525.7,null,"121"],[22,"Lee Jordan","M","Open",null,"",9,2532.4,null,"120"]]},{"year":2023,"km":10,"rows":[[1,"Julian Manning","M","40-49",null,"",1,2230.1,null,"1"],[2,"Jack Collins","M","25-39",null,"",2,2247.4,null,"40"],[3,"James Hughes","M","25-39",null,"",3,2261.4,null,"36"],[4,"Tim Parker","M","25-39",null,"",4,2340.9,null,"100"],[5,"Emlyn Hughes","M","40-49",null,"",5,2377.4,null,"85"],[6,"Mark Bicknell","M","40-49",null,"",6,2425.6,null,"37"],[7,"Simon Withers","M","25-39",null,"",7,2501.3,null,"46"],[8,"Rob Wilson","M","40-49",null,"",8,2529.3,null,"16"],[9,"Steve Edwards","M","50-59",null,"",9,2536.3,null,"61"],[10,"Kevin Gale","M","50-59",null,"",10,2558.8,null,"23"],[11,"Gavin Roberts","M","50-59",null,"",11,2649.8,null,"26"],[12,"Paul Saunders","M","25-39",null,"",12,2681.9,null,"60"],[13,"James Hounslow","M","25-39",null,"",13,2699.3,null,"30"],[14,"Gemma Heggs","F","25-39",null,"",1,2708.0,null,"32"],[15,"Gary Armstrong","M","25-39",null,"",14,2724.5,null,"83"],[16,"David Noble","M","40-49",null,"",15,2727.1,null,"17"],[17,"George Blackshaw","M","U25",null,"",16,2735.7,null,"108"],[18,"Nicholas Webb","M","50-59",null,"",17,2742.5,null,"15"],[19,"Tom Frost","M","50-59",null,"",18,2775.0,null,"76"],[20,"Mat Sibley","M","50-59",null,"",19,2775.3,null,"13"],[21,"Ed Wheelhouse","M","40-49",null,"",20,2809.7,null,"92"],[22,"Eddie Vincent","M","40-49",null,"",21,2833.5,null,"35"],[23,"Rob Moore","M","40-49",null,"",22,2837.7,null,"54"],[24,"Dan Starkey","M","25-39",null,"",23,2846.9,null,"90"],[25,"Naomi Ambrose","F","40-49",null,"",2,2879.7,null,"2"],[26,"Paul Welch","M","40-49",null,"",24,2887.8,null,"58"],[27,"Theo Gibson","M","25-39",null,"",25,2908.7,null,"109"],[28,"Christina Jenkins","F","40-49",null,"",3,2921.4,null,"55"],[29,"Jono Marval","M","50-59",null,"",26,2926.2,null,"112"],[30,"Serena Langham","F","25-39",null,"",4,2928.5,null,"110"],[31,"Andrew Tarrant","M","50-59",null,"",27,2938.6,null,"12"],[32,"John Backley","M","50-59",null,"",28,2954.4,null,"111"],[33,"Charlie Wright","M","25-39",null,"",29,2958.7,null,"104"],[34,"Frank Luard","M","40-49",null,"",30,2959.9,null,"10"],[35,"George Casalis De Pury","M","25-39",null,"",31,2963.6,null,"88"],[36,"Angus Wells","M","50-59",null,"",32,2978.0,null,"52"],[37,"Adam Jay","M","40-49",null,"",33,3005.0,null,"89"],[38,"Sam Gyles","M","25-39",null,"",34,3009.5,null,"22"],[39,"Sam Grover","M","25-39",null,"",35,3027.0,null,"53"],[40,"Stephen Knight","M","40-49",null,"",36,3034.7,null,"49"],[41,"Daniel Phoenix","M","40-49",null,"",37,3061.4,null,"96"],[42,"David Tester","M","50-59",null,"",38,3069.6,null,"103"],[43,"Andrew Hook","M","25-39",null,"",39,3073.9,null,"11"],[44,"Andy Newcombe","M","25-39",null,"",40,3084.8,null,"78"],[45,"Monika Hepner","F","25-39",null,"",5,3104.5,null,"70"],[46,"Dyfan Rowlands","M","25-39",null,"",41,3113.0,null,"71"],[47,"Jamie Lewis","M","50-59",null,"",42,3128.0,null,"97"],[48,"Matt Blackshaw","M","40-49",null,"",43,3143.4,null,"107"],[49,"Kirsty Aked","F","40-49",null,"",6,3145.6,null,"62"],[50,"Tom Allen","M","25-39",null,"",44,3166.2,null,"64"],[51,"George Crossley","M","25-39",null,"",45,3169.1,null,"113"],[52,"Belinda Lewis-Jones","F","40-49",null,"",7,3178.1,null,"98"],[53,"David Jolliffe","M","50-59",null,"",46,3184.6,null,"18"],[54,"Seb Rowland","M","U25",null,"",47,3207.9,null,"87"],[55,"Ben Hulme","M","40-49",null,"",48,3272.0,null,"106"],[56,"Andy Lucas","M","40-49",null,"",49,3275.1,null,"101"],[57,"Hugo Moore","M","40-49",null,"",50,3281.1,null,"8"],[58,"Nick Fulstow","M","50-59",null,"",51,3284.1,null,"47"],[59,"Rachel Atherton","F","40-49",null,"",8,3297.2,null,"48"],[60,"Graham Excell","M","40-49",null,"",52,3313.6,null,"75"],[61,"Andy Fleck","M","50-59",null,"",53,3350.9,null,"99"],[62,"Robin Garton","M","40-49",null,"",54,3356.0,null,"91"],[63,"David Rose","M","50-59",null,"",55,3378.7,null,"65"],[64,"Toby Finch","M","60-69",null,"",56,3409.0,null,"105"],[65,"Catie Pettit","F","40-49",null,"",9,3426.8,null,"77"],[66,"Bridie Strachan","F","25-39",null,"",10,3449.3,null,"72"],[67,"Christina Chapman","F","40-49",null,"",11,3474.8,null,"45"],[68,"Jack Stroud","M","25-39",null,"",57,3488.5,null,"67"],[69,"Danny Rowland","M","40-49",null,"",58,3520.0,null,"86"],[70,"Andy Chapman","M","50-59",null,"",59,3535.7,null,"44"],[71,"Will Galgey","M","40-49",null,"",60,3594.0,null,"80"],[72,"Marishelle Butler","F","60-69",null,"",12,3605.8,null,"74"],[73,"Dan Fulford","M","U25",null,"",61,3652.3,null,"20"],[74,"Sam Sargant","M","40-49",null,"",62,3653.2,null,"7"],[75,"Jennifer Tankard","F","50-59",null,"",13,3661.9,null,"6"],[76,"Sarah Mackie","F","25-39",null,"",14,3674.2,null,"34"],[77,"Carly Sargent","F","40-49",null,"",15,3688.6,null,"79"],[78,"Ian Smith","M","40-49",null,"",63,3697.2,null,"84"],[79,"Jenny Tyler","F","40-49",null,"",16,3715.5,null,"114"],[80,"Ann Parker","F","50-59",null,"",17,3718.1,null,"4"],[81,"Julian Lake","M","50-59",null,"",64,3828.3,null,"69"],[82,"Joe Houlberg","M","U25",null,"",65,3830.4,null,"39"],[83,"Ken Houlberg","M","50-59",null,"",66,3832.7,null,"38"],[84,"Penny Overy","F","50-59",null,"",18,3855.0,null,"93"],[85,"Bekki Leaves","F","40-49",null,"",19,3870.3,null,"50"],[86,"Lisa-Marie Peckover","F","25-39",null,"",20,3889.6,null,"82"],[87,"Alex Thompson","M","U25",null,"",67,3909.0,null,"19"],[88,"Scarlett Smith","F","U25",null,"",21,3910.7,null,"24"],[89,"Francesca Blakeburn","F","25-39",null,"",22,4075.1,null,"33"],[90,"Lillian De La Rie","F","25-39",null,"",23,4077.6,null,"43"],[91,"Terry Aked","M","50-59",null,"",68,4107.7,null,"63"],[92,"Steve Barker","M","50-59",null,"",69,4226.9,null,"21"],[93,"Michael Stares","M","70+",null,"",70,4270.1,null,"102"],[94,"July Stevenson","F","50-59",null,"",24,4359.6,null,"42"],[95,"Andy Stevenson","M","50-59",null,"",71,4362.3,null,"41"],[96,"Hayley Lake","F","40-49",null,"",25,4395.6,null,"68"],[97,"Agnieszka Lerach","F","40-49",null,"",26,4453.7,null,"14"],[98,"Kimberley Churchill","F","25-39",null,"",27,4562.4,null,"57"],[99,"Clare Welch","F","40-49",null,"",28,4565.1,null,"59"]]},{"year":2024,"km":5,"rows":[[1,"Jonathan Pillinger-Cork","M","Open",null,"",1,1157.8,null,"125"],[2,"William Avery","M","U16",null,"",2,1187.5,null,"100"],[3,"Moritz Flohr","M","Open",null,"",3,1214.6,null,"109"],[4,"Max Wilding","M","U16",null,"",4,1307.7,null,"139"],[5,"George Gasser","M","U16",null,"",5,1531.2,null,"111"],[6,"Suzanne Richardson","F","Open",null,"",1,1536.1,null,"130"],[7,"Alfie Goodwin-Hudson","M","Open",null,"",6,1542.7,null,"112"],[8,"Flora Provest","F","Open",null,"",2,1545.4,null,"129"],[9,"Rupert Privett","M","Open",null,"",7,1582.2,null,"127"],[10,"Rowena Gordon","F","Open",null,"",3,1586.7,null,"140"],[11,"Max Hammond","M","U16",null,"",8,1622.6,null,"113"],[12,"Belinda Lewis-Jones","F","Open",null,"",4,1648.2,null,"119"],[13,"Will Pirie","M","Open",null,"",9,1709.1,null,"126"],[14,"Erin Wilding","F","U16",null,"",5,1715.8,null,"138"],[15,"Harriet Rowberry","F","U16",null,"",6,1749.0,null,"133"],[16,"Thomas Bartlett","M","U16",null,"",10,1749.0,null,"103"],[17,"Chloe Gasser","F","U16",null,"",7,1749.0,null,"110"],[18,"Oliver Clements","M","U16",null,"",11,1750.8,null,"106"],[19,"Matt Clements","M","Open",null,"",12,1753.2,null,"105"],[20,"Aisling McWilliam","F","Open",null,"",8,1813.9,null,"121"],[21,"Amanda Parkman","F","Open",null,"",9,1877.2,null,"122"],[22,"Julia Keitley","F","Open",null,"",10,1887.6,null,"118"],[23,"Carsten Flohr","M","Open",null,"",13,1935.3,null,"108"],[24,"Lindsey Shephard","F","Open",null,"",11,1992.8,null,"135"],[25,"Adrian Ritchie","M","Open",null,"",14,1995.2,null,"131"],[26,"Sarah Ritchie","F","Open",null,"",12,1998.0,null,"132"],[27,"Darcey Provest","F","U16",null,"",13,2045.8,null,"128"],[28,"Jo Phillips","F","Open",null,"",14,2048.4,null,"124"],[29,"Kaiya Innes","F","Open",null,"",15,2078.5,null,"117"],[30,"Sarah Baker","F","Open",null,"",16,2084.4,null,"102"],[31,"Robert Hinkley","M","Open",null,"",15,2108.5,null,"115"],[32,"Victoria Corbett","F","Open",null,"",17,2111.2,null,"107"],[33,"Tor Hardman","F","Open",null,"",18,2114.1,null,"114"],[34,"Miriam Baker","F","Open",null,"",19,2116.3,null,"101"],[35,"Sarah Berry","F","Open",null,"",20,2171.6,null,"104"],[36,"Joanne Thomas","F","Open",null,"",21,2321.8,null,"136"],[37,"Sarah Wade","F","Open",null,"",22,2393.1,null,"137"]]},{"year":2024,"km":10,"rows":[[1,"Neil Williams","M","25-39",null,"",1,2275.3,null,"57"],[2,"Jack Collins","M","25-39",null,"",2,2305.4,null,"69"],[3,"Julian Manning","M","40-49",null,"",3,2364.3,null,"1"],[4,"Mark Bicknell","M","50-59",null,"",4,2410.8,null,"7"],[5,"Josh Cottrell","M","25-39",null,"",5,2453.9,null,"13"],[6,"Jon Ward","M","25-39",null,"",6,2522.5,null,"48"],[7,"Rob Wilson","M","40-49",null,"",7,2536.3,null,"51"],[8,"Steve Edwards","M","50-59",null,"",8,2591.8,null,"15"],[9,"Andrew Meredith","M","25-39",null,"",9,2594.9,null,"58"],[10,"Gemma Heggs","F","25-39",null,"",1,2654.4,null,"75"],[11,"Michael Harrison","M","25-39",null,"",10,2677.3,null,"20"],[12,"Clive Hutchinson","M","50-59",null,"",11,2687.5,null,"54"],[13,"George Casalis De Pury","M","25-39",null,"",12,2758.5,null,"8"],[14,"Eddie Vincent","M","40-49",null,"",13,2830.6,null,"46"],[15,"Mat Sibley","M","50-59",null,"",14,2841.4,null,"44"],[16,"Andrew Tarrant","M","60-69",null,"",15,2854.4,null,"79"],[17,"Darryl Silk","M","25-39",null,"",16,2885.0,null,"78"],[18,"Greg Clarke","M","50-59",null,"",17,2898.2,null,"66"],[19,"Tom Allen","M","25-39",null,"",18,2900.3,null,"4"],[20,"Kevin Gale","M","50-59",null,"",19,2903.2,null,"18"],[21,"Gary Armstrong","M","25-39",null,"",20,2904.9,null,"61"],[22,"Paul Welch","M","40-49",null,"",21,2905.9,null,"62"],[23,"Andy Newcombe","M","25-39",null,"",22,2923.8,null,"32"],[24,"Simon Jefferies","M","25-39",null,"",23,2927.3,null,"74"],[25,"Andrew Hook","M","25-39",null,"",24,2949.8,null,"21"],[26,"Tom Frost","M","50-59",null,"",25,2953.0,null,"65"],[27,"Ken Houlberg","M","50-59",null,"",26,3030.0,null,"80"],[28,"Rob Moore","M","40-49",null,"",27,3038.6,null,"55"],[29,"Kirsty Aked","F","40-49",null,"",2,3076.5,null,"2"],[30,"David Tester","M","50-59",null,"",28,3111.9,null,"67"],[31,"Richard Casalis De Pury","M","25-39",null,"",29,3171.6,null,"9"],[32,"Adam Jay","M","40-49",null,"",30,3210.4,null,"26"],[33,"David Vine","M","60-69",null,"",31,3213.6,null,"47"],[34,"Hannah Finch","F","25-39",null,"",3,3217.3,null,"17"],[35,"James Mcleish","M","30-39",null,"",32,3226.8,null,"29"],[36,"Peter Fraher","M","25-39",null,"",33,3244.7,null,"71"],[37,"Hector Butcher","M","25-39",null,"",34,3251.5,null,"73"],[38,"Su Balcock","F","50-59",null,"",4,3288.2,null,"5"],[39,"Catie Pettit","F","40-49",null,"",5,3314.1,null,"34"],[40,"Joanna Tester","F","40-49",null,"",6,3316.3,null,"68"],[41,"Chris Barnes","M","25-39",null,"",35,3350.6,null,"6"],[42,"Sam Hope","M","25-39",null,"",36,3352.7,null,"22"],[43,"Max Blood","M","25-39",null,"",37,3380.9,null,"70"],[44,"Jess Silk","F","25-39",null,"",7,3395.9,null,"77"],[45,"Olivia Williams","F","40-49",null,"",8,3416.4,null,"50"],[46,"Lewis Richards","M","40-49",null,"",38,3419.3,null,"37"],[47,"Mark Smith","M","60-69",null,"",39,3439.8,null,"72"],[48,"Joel Tanzer","M","40-49",null,"",40,3446.6,null,"45"],[49,"Bekki Leaves","F","40-49",null,"",9,3504.7,null,"27"],[50,"Elliot Parkman","M","25-39",null,"",41,3530.8,null,"33"],[51,"Marcus Neal","M","60-69",null,"",42,3535.3,null,"31"],[52,"Graham Excell","M","40-49",null,"",43,3546.1,null,"64"],[53,"Bryan Rough","M","60-69",null,"",44,3558.8,null,"42"],[54,"Ladislava Williams","F","40-49",null,"",10,3615.6,null,"52"],[55,"Toby Finch","M","60-69",null,"",45,3621.9,null,"53"],[56,"","","",null,"",null,3629.4,null,""],[57,"Alex Sakatukwa","M","50-59",null,"",46,3654.3,null,"59"],[58,"Rupert Provest","M","50-59",null,"",47,3667.0,null,"35"],[59,"Terry Aked","M","50-59",null,"",48,3678.9,null,"3"],[60,"Kat Chowns","F","40-49",null,"",11,3690.2,null,"10"],[61,"Gemma Clements","F","40-49",null,"",12,3749.9,null,"81"],[62,"Tom Crosthwaite","M","25-39",null,"",49,3754.0,null,"14"],[63,"Danny Rowland","M","50-59",null,"",50,3862.6,null,"43"],[64,"Laura Dunkley","F","25-39",null,"",13,4012.2,null,"56"],[65,"Frances Rose","F","60-69",null,"",14,4204.7,null,"41"],[66,"Mike Roberts","M","60-69",null,"",51,4358.5,null,"39"],[67,"Jan Lewis","F","50-59",null,"",15,4409.7,null,"28"],[68,"Lorna Richard","F","50-59",null,"",16,4459.0,null,"36"],[69,"Sandra Humphrey","F","60-69",null,"",17,4463.3,null,"23"],[70,"John Else","M","50-59",null,"",52,4485.4,null,"16"],[71,"Michael Stares","M","70+",null,"",53,4509.3,null,"76"],[72,"Lisa-Marie Peckover","F","25-39",null,"",18,4798.2,null,"60"],[73,"Clare Welch","F","40-49",null,"",19,4801.2,null,"63"],[74,"Elise Roberts","F","25-39",null,"",20,5264.6,null,"38"]]},{"year":2025,"km":5,"rows":[[1,"Jonathan Pillinger-Cork","M","",null,"",1,1163.0,null,""],[2,"George Gasser","M","",null,"",2,1455.4,null,""],[3,"Alfie Goodwin-Hudson","M","",null,"",3,1460.4,null,""],[4,"Monty Williams","M","",null,"",4,1568.4,null,""],[5,"William Flegg","M","",null,"",5,1604.5,null,""],[6,"Rupert Privett","M","",null,"",6,1615.1,null,""],[7,"Thomas Bartlett","M","",null,"",7,1624.3,null,""],[8,"Hector Luard","M","",null,"",8,1736.6,null,""],[9,"Harriet Rowberry","F","",null,"",1,1747.9,null,""],[10,"Chloe Gasser","F","",null,"",2,1790.8,null,""],[11,"Carolyn Kenyon","F","",null,"",3,1813.3,null,""],[12,"Sarah Mackie","F","",null,"",4,1819.7,null,""],[13,"Joanna Ward","F","",null,"",5,1829.6,null,""],[14,"Imogen Bartlett","F","",null,"",6,1838.6,null,""],[15,"Susan Blandford","F","",null,"",7,1855.4,null,""],[16,"Cecilia Banning","F","",null,"",8,1922.7,null,""],[17,"Richard Ward","M","",null,"",9,1933.1,null,""],[18,"Cara Laffoley-Lane","F","",null,"",9,1954.0,null,""],[19,"Barney Marvall","M","",null,"",10,1976.9,null,""],[20,"Jonathan Batey","M","",null,"",11,1986.5,null,""],[21,"Christopher Bailey","M","",null,"",12,1998.1,null,""],[22,"Donna May","F","",null,"",10,2026.3,null,""],[23,"Jen Mcguire","F","",null,"",11,2028.6,null,""],[24,"Neil Maton","M","",null,"",13,2035.7,null,""],[25,"Emma Thomas","F","",null,"",12,2070.3,null,""],[26,"Charlie Jones","","",null,"",null,2131.8,null,""],[27,"Michael Bailey","M","",null,"",14,2133.7,null,""],[28,"Eliza Bailey","F","",null,"",13,2135.1,null,""],[29,"Beth Williamson","F","",null,"",14,2210.4,null,""],[30,"Kate Rowland","F","",null,"",15,2215.3,null,""],[31,"Celeste Worrall","F","",null,"",16,2229.3,null,""],[32,"Jodie Phelps","F","",null,"",17,2269.6,null,""],[33,"Annabel Privett","F","",null,"",18,2313.1,null,""],[34,"Fleur Smeed","F","",null,"",19,2341.4,null,""],[35,"Virginia Gata Esperanca","F","",null,"",20,2390.7,null,""],[36,"Elise Roberts","F","",null,"",21,2406.1,null,""],[37,"Andrew Gover","M","",null,"",15,3394.1,null,""]]},{"year":2025,"km":10,"rows":[[1,"Jack Collins","M","25-39",null,"",1,2375.5,null,""],[2,"Neil Williams","M","40-49",null,"",2,2402.2,null,""],[3,"Steve Edwards","M","50-59",null,"",3,2571.9,null,""],[4,"Sean Rose","M","40-49",null,"",4,2615.5,null,""],[5,"Kevin Watkins","M","50-59",null,"",5,2638.1,null,""],[6,"Max Wilding","M","U25",null,"",6,2653.1,null,""],[7,"George Casalis De Pury","M","25-39",null,"",7,2713.8,null,""],[8,"Daniel Goddard","M","40-49",null,"",8,2787.9,null,""],[9,"Hugo Grant","M","25-39",null,"",9,2827.7,null,""],[10,"Nicolas Webb","M","50-59",null,"",10,2844.0,null,""],[12,"Kayleigh Gyles","F","25-39",null,"",1,2856.8,null,""],[13,"Andrew Tarrant","M","60-69",null,"",11,2937.6,null,""],[14,"Freya Stanger","F","U25",null,"",2,2963.1,null,""],[15,"Gary Armstrong","M","25-39",null,"",12,2978.7,null,""],[16,"Andrew Hook","M","25-39",null,"",13,3030.1,null,""],[17,"Mark Hargreaves","M","60-69",null,"",14,3075.2,null,""],[18,"Anne Walton","F","60-69",null,"",3,3138.4,null,""],[19,"Charlie Wright","M","40-49",null,"",15,3143.7,null,""],[20,"Sam Ashard","M","40-49",null,"",16,3148.6,null,""],[21,"David Tester","M","50-59",null,"",17,3170.8,null,""],[22,"Rob Moore","M","40-49",null,"",18,3175.7,null,""],[23,"Pete Chrisholm","M","40-49",null,"",19,3184.1,null,""],[24,"Gerry Hyde","M","60-69",null,"",20,3191.6,null,""],[25,"Jonathan Taylor","M","60-69",null,"",21,3216.5,null,""],[26,"Angus Elphinstone","M","40-49",null,"",22,3235.7,null,""],[27,"Belinda Lewis-Jones","F","40-49",null,"",4,3261.7,null,""],[28,"Paul Jackson","M","50-59",null,"",23,3273.8,null,""],[29,"Oliver Fryer","M","40-49",null,"",24,3298.9,null,""],[30,"Kimberley McIndoe","F","50-59",null,"",5,3312.5,null,""],[31,"Richard Hunt","M","50-59",null,"",25,3322.2,null,""],[32,"Matt Jinman","M","40-49",null,"",26,3331.4,null,""],[33,"Sam Sargant","M","40-49",null,"",27,3334.5,null,""],[34,"Clare Ryan","F","50-59",null,"",6,3337.7,null,""],[35,"Sophie Macdonald","F","40-49",null,"",7,3340.1,null,""],[36,"Stuart Ingham","M","40-49",null,"",28,3342.7,null,""],[37,"Jeffrey Streeter","M","40-49",null,"",29,3347.4,null,""],[38,"Adam Jay","M","40-49",null,"",30,3374.7,null,""],[39,"Joel Tanzer","M","40-49",null,"",31,3384.3,null,""],[40,"Peter Fraher","M","25-39",null,"",32,3395.5,null,""],[41,"Gg Galgey","M","U25",null,"",33,3399.1,null,""],[42,"Freddie Bartlett","M","40-49",null,"",34,3419.5,null,""],[43,"Jean-Pierre Dekker","M","50-59",null,"",35,3439.3,null,""],[44,"Landa Acevedo-Scott","F","40-49",null,"",8,3441.8,null,""],[45,"Ruth Brownlee","F","40-49",null,"",9,3496.1,null,""],[46,"Tom Crosthwaite","M","25-39",null,"",36,3505.1,null,""],[47,"Max Blood","M","25-39",null,"",37,3507.4,null,""],[48,"Oliver Fryer","M","40-49",null,"",38,3511.6,null,""],[49,"Hannah David","F","25-39",null,"",10,3517.6,null,""],[50,"Paul Teuten","M","60-69",null,"",39,3538.5,null,""],[51,"Zeb Jay","M","U25",null,"",40,3542.1,null,""],[52,"Winston Bond","M","50-59",null,"",41,3544.4,null,""],[53,"Catie Pettit","F","40-49",null,"",11,3553.5,null,""],[54,"Will Galgey","M","50-59",null,"",42,3558.2,null,""],[55,"Alex Thompson","M","U25",null,"",43,3562.7,null,""],[56,"Emma Napper","F","25-39",null,"",12,3569.8,null,""],[57,"Sam Sargant","M","40-49",null,"",44,3585.4,null,""],[58,"Rob Reynolds","M","60-69",null,"",45,3635.6,null,""],[59,"Danny Rowland","M","50-59",null,"",46,3669.6,null,""],[60,"Nick Fulstow","M","50-59",null,"",47,3681.9,null,""],[61,"Olivia Williams","F","40-49",null,"",13,3697.2,null,""],[62,"Tereza Pilnackova","F","40-49",null,"",14,3716.4,null,""],[63,"Oliver Tait","M","U25",null,"",48,3737.5,null,""],[64,"Toby Finch","M","60-69",null,"",49,3745.5,null,""],[65,"Joe Wilkins","M","U25",null,"",50,3752.4,null,""],[66,"Howard Kirrane","M","70+",null,"",51,3766.8,null,""],[67,"David Rose","M","50-59",null,"",52,3777.9,null,""],[68,"Christopher Thomas","M","40-49",null,"",53,3782.7,null,""],[69,"Mary Hancox","F","50-59",null,"",15,3807.9,null,""],[70,"Sarah Galgey","F","40-49",null,"",16,3817.9,null,""],[71,"Luke Damron","M","25-39",null,"",54,3827.0,null,""],[72,"Katy Bater","F","40-49",null,"",17,3872.7,null,""],[73,"Lorna Cowan","F","50-59",null,"",18,3910.4,null,""],[75,"Sam Gri","","",null,"",null,null,null,""],[76,"Gina Pruett","F","25-39",null,"",19,3922.9,null,""],[77,"Ben Flint-Hulme","M","40-49",null,"",55,3932.5,null,""],[78,"Jenny Parks","F","60-69",null,"",20,3938.3,null,""],[79,"Mike Roberts","M","60-69",null,"",56,3943.2,null,""],[80,"Alex Worrall","M","40-49",null,"",57,3967.0,null,""],[81,"Sarah Ritchie","F","50-59",null,"",21,3993.2,null,""],[82,"Adrian Ritchie","M","50-59",null,"",58,3993.9,null,""],[83,"Nicola Gower","F","40-49",null,"",22,4004.8,null,""],[84,"Graham Atkins","M","50-59",null,"",59,4023.1,null,""],[85,"Katy Bater","F","40-49",null,"",23,4043.2,null,""],[86,"Matthew Meyer","M","25-39",null,"",60,4064.3,null,""],[87,"Richard Polson","M","25-39",null,"",61,4068.8,null,""],[88,"Abigail Moore","F","U25",null,"",24,4101.5,null,""],[89,"Julie Whitney","F","50-59",null,"",25,4140.8,null,""],[90,"Georgina Fuggle","F","40-49",null,"",26,4149.1,null,""],[91,"Roonie Ashard","F","40-49",null,"",27,4151.6,null,""],[92,"Polly Jenkins","F","40-49",null,"",28,4155.1,null,""],[93,"Laura Marchant","F","40-49",null,"",29,4160.4,null,""],[94,"Charlotte Kennedy","F","40-49",null,"",30,4160.4,null,""],[95,"Trevor Wilkins","M","50-59",null,"",62,4225.1,null,""],[96,"Jenny Worrall","F","40-49",null,"",31,4289.1,null,""],[97,"Paul Allison","M","50-59",null,"",63,4349.1,null,""],[98,"Ben Clarke","M","40-49",null,"",64,4368.1,null,""],[99,"Gihan Ganesh","M","40-49",null,"",65,4370.7,null,""],[100,"Steven Hamilton","M","50-59",null,"",66,4409.9,null,""],[101,"Sandra Humphrey","F","60-69",null,"",32,4435.4,null,""],[102,"Laura Dunkley","F","25-39",null,"",33,4465.6,null,""],[103,"Carly Ashley","F","40-49",null,"",34,4479.4,null,""],[104,"Lorna Richard","F","50-59",null,"",35,4502.8,null,""],[105,"Clare Welch","F","40-49",null,"",36,4543.2,null,""],[106,"Michael Stares","M","70+",null,"",67,4893.8,null,""],[107,"Sarah Wade","F","50-59",null,"",37,4930.8,null,""],[108,"Laura Millington","F","40-49",null,"",38,5056.3,null,""],[109,"Becca Latter","F","25-39",null,"",39,5478.7,null,""]]},{"year":2025,"km":20,"rows":[[1,"Julian Manning","M","",null,"",1,5143.0,null,""],[2,"Mark Bicknell","M","",null,"",2,5233.0,null,""],[3,"Kevin Gale","M","",null,"",3,5577.0,null,""],[4,"Michael Harrison","M","",null,"",4,5673.0,null,""],[5,"Mat Sibley","M","",null,"",5,5993.0,null,""],[6,"Paul Welch","M","",null,"",6,6120.0,null,""],[7,"Eddie Vincent","M","",null,"",7,6247.0,null,""],[8,"Tom Allen","M","",null,"",8,6428.0,null,""],[9,"Greg Clarke","M","",null,"",9,6445.0,null,""],[10,"Jono Marval","M","",null,"",10,6560.0,null,""],[11,"Samantha Morris","F","",null,"",1,6707.0,null,""],[12,"Lisa-Marie Peckover","F","",null,"",2,6751.0,null,""],[13,"Chris Penfold","M","",null,"",11,6753.0,null,""],[14,"Andy Newcombe","M","",null,"",12,6885.0,null,""],[15,"Edward Davies","M","",null,"",13,6923.0,null,""],[16,"Chris Cozens","M","",null,"",14,7098.0,null,""],[17,"Celia Fox-Robinson","F","",null,"",3,7137.0,null,""],[18,"Lee Armstrong","M","",null,"",15,7194.0,null,""],[19,"Alex Holloran","M","",null,"",16,7506.0,null,""],[20,"Aislee McWilliam","F","",null,"",4,7542.0,null,""],[21,"Owen Williamson","M","",null,"",17,7701.0,null,""],[22,"Zelda Williamson","F","",null,"",5,7720.0,null,""],[23,"Annabel Wooden","F","",null,"",6,9868.0,null,""]]},{"year":2026,"km":5,"rows":[[1,"Jonathan Pillinger-Cork","M","",43,"Romsey Road Runners",1,1219.0,1219.0,"105"],[2,"Edward Gregory","M","",25,"BLF&S Athletics",2,1417.0,1416.0,"271"],[3,"Nick Webb","M","",53,"",3,1467.0,1465.0,"253"],[4,"Rupert Privett","M","",48,"",4,1569.0,1567.0,"296"],[5,"Monty Williams","M","",13,"",5,1576.0,1574.0,"117"],[6,"Kierran M Lakeland","M","",38,"Olympia Athletics",6,1598.0,1596.0,"121"],[7,"Tony Hewett","M","",48,"City of Portsmouth AC",7,1614.0,1612.0,"14"],[8,"Suzanne Richardson","F","",50,"Denmead Striders",1,1614.0,1613.0,"201"],[9,"William Flegg","M","",46,"",8,1648.0,1644.0,"38"],[10,"Toby Mossop","M","",39,"",9,1666.0,1664.0,"175"],[11,"Mat Sibley","M","",54,"Denmead Striders",10,1669.0,1666.0,"204"],[12,"Thomas Bartlett","M","",15,"",11,1705.0,1703.0,"130"],[13,"Emma Wickens","F","",54,"Chichester Runners & AC",2,1724.0,1721.0,"99"],[14,"Harriet Rowberry","F","",15,"Olympia Athletics",3,1789.0,1788.0,"207"],[15,"Sarah Mackie","F","",40,"",4,1855.0,1853.0,"81"],[16,"Sajan Panta","M","",21,"BLF&S Athletics",12,1871.0,1869.0,"274"],[17,"Imogen Bartlett","F","",13,"",5,1874.0,1874.0,"125"],[18,"Fleur Smeed","F","",40,"",6,1899.0,1895.0,"43"],[19,"Poppy Lowe","F","",37,"",7,1931.0,1928.0,"283"],[20,"Carolyn Kenyon","F","",49,"",8,1942.0,1940.0,"41"],[21,"Stephanie Casalis De Pury","F","",32,"",9,1971.0,1967.0,"108"],[22,"Jonathan Batey","M","",70,"Westfields Harrier",13,2041.0,2039.0,"279"],[23,"Evan Adams","M","",14,"",14,2077.0,2071.0,"292"],[24,"Tim Adams","M","",45,"Team Thomas",15,2077.0,2071.0,"294"],[25,"Neil Maton","M","",52,"",16,2100.0,2097.0,"129"],[26,"Sarah Osman","F","",47,"",10,2113.0,2106.0,"248"],[27,"Dewi Adams","M","",12,"Team Thomas",17,2151.0,2146.0,"291"],[28,"Rebecca Adams","F","",47,"Team Thomas",11,2161.0,2155.0,"293"],[29,"Sophie Robinson","F","",40,"",12,2171.0,2166.0,"101"],[30,"Mike Patey","M","",52,"",18,2181.0,2175.0,"295"],[31,"Cara Laffoley-Lane","F","",21,"",13,2184.0,2181.0,"265"],[32,"Richard Ward","M","",43,"",19,2206.0,2203.0,"116"],[33,"Rosalind Rea","F","",43,"",14,2263.0,2260.0,"267"],[34,"Michael Bailey","M","",58,"",20,2281.0,2281.0,"222"],[35,"Eliza Bailey","F","",30,"",15,2282.0,2278.0,"229"],[36,"Lorna Carter","F","",50,"",16,2292.0,2287.0,"191"],[37,"Victoria Maton","F","",51,"",17,2292.0,2288.0,"131"],[38,"Hannah Riekemann","F","",38,"",18,2311.0,2306.0,"182"],[39,"Emily Freeman","F","",23,"",19,2327.0,2325.0,"19"],[40,"Catherine Reynolds","F","",61,"",20,2358.0,2354.0,"216"],[41,"Joanna Ward","F","",42,"Denmead Striders",21,2376.0,2373.0,"115"],[42,"Annabel Privett","F","",50,"",22,2405.0,2398.0,"153"],[43,"Michelle Young","F","",56,"Fareham Running Club",23,2463.0,2459.0,"203"],[44,"Debbie Fulstow","F","",42,"",24,2588.0,2585.0,"6"],[45,"Virginia Gata Esperanca","F","",58,"Wickham runners",25,2598.0,2594.0,"280"],[46,"Michael Stares","M","",86,"",21,2632.0,2627.0,"59"],[47,"Jennie Lambe","F","",42,"Portsmouth Joggers",26,2642.0,2637.0,"258"]]},{"year":2026,"km":10,"rows":[[1,"Henry Piper","M","",20,"Denmead Striders",1,2201.0,2200.0,"187"],[2,"Max Wilding","M","",17,"Olympia Athletics",2,2356.0,2354.0,"171"],[3,"Steve Edwards","M","",53,"Chichester Runners & AC",3,2477.0,2475.0,"232"],[4,"George Casalis De Pury","M","",33,"",4,2525.0,2524.0,"109"],[5,"Matt Darby","M","",37,"",5,2590.0,2589.0,"79"],[6,"Joe Mcquilken","M","",38,"Portsmouth Joggers",6,2598.0,2596.0,"276"],[7,"Adrian Long","M","",39,"Chichester Runners & AC",7,2627.0,2626.0,"234"],[8,"Kayleigh Gyles","F","",36,"Denmead Striders",1,2671.0,2669.0,"254"],[9,"Eddie Vincent","M","",48,"",8,2717.0,2715.0,"164"],[10,"Chloe Collins","F","",30,"",2,2745.0,2742.0,"97"],[11,"Andrew Tarrant","M","",62,"Alton Runners",9,2749.0,2746.0,"197"],[12,"Roxane Long","F","",39,"",3,2752.0,2750.0,"233"],[13,"Ryan Bendall","M","",42,"",10,2775.0,2773.0,"255"],[14,"George Owens","M","",43,"",11,2835.0,2830.0,"252"],[15,"Harry Austin","M","",31,"",12,2838.0,2832.0,"289"],[16,"Chris Cozens","M","",42,"",13,2844.0,2838.0,"246"],[17,"Lawrence Blake","M","",34,"Denmead Striders",14,2888.0,2885.0,"96"],[18,"Rob Moore","M","",47,"Denmead Striders",15,2901.0,2898.0,"266"],[19,"Steve Daxter","M","",31,"",16,2915.0,2910.0,"237"],[20,"Angus Pollard","M","",31,"",17,2916.0,2912.0,"277"],[21,"Tom Drew","M","",25,"de Mellow & Co",18,2937.0,2934.0,"157"],[22,"Charlie Wright","M","",42,"",19,2962.0,2951.0,"264"],[23,"Alan Mcvittie","M","",64,"Denmead Striders",20,2990.0,2986.0,"200"],[24,"Andrew Hook","M","",36,"Alton Runners",21,3007.0,3001.0,"219"],[25,"Kirsty Aked","F","",50,"Denmead Striders",4,3021.0,3017.0,"199"],[26,"Neil Freeman","M","",55,"Fordy Runs Running Club",22,3032.0,3026.0,"206"],[27,"Peter Roper","M","",57,"",23,3037.0,3033.0,"58"],[28,"Angus Wells","M","",60,"",24,3038.0,3033.0,"228"],[29,"Belinda Lewis-Jones","F","",47,"Portsmouth Triathletes",5,3046.0,3040.0,"170"],[30,"Freddie Bartlett","M","",47,"",25,3062.0,3055.0,"122"],[31,"Dan Fulford","M","",19,"",26,3066.0,3063.0,"286"],[32,"Andy Mcclung","M","",50,"",27,3067.0,3058.0,"251"],[33,"James Harding","M","",67,"",28,3078.0,3071.0,"93"],[34,"Sean Steadman","M","",37,"Westfields Harrier",29,3081.0,3074.0,"278"],[35,"Abigail Greaves","F","",51,"New Forest Runners",6,3083.0,3078.0,"162"],[36,"Harry Rough","M","",24,"",30,3088.0,3086.0,"269"],[37,"Tommy Rowland","M","",21,"",31,3091.0,3083.0,"165"],[38,"Marcus Neal","M","",65,"Sheet Striders",32,3094.0,3085.0,"181"],[39,"Chris Ware","M","",45,"Portsmouth Triathletes",33,3098.0,3091.0,"239"],[40,"Adam Jay","M","",50,"",34,3111.0,3107.0,"261"],[41,"George Stroud","M","",27,"",35,3181.0,3174.0,"221"],[42,"Andy Young","M","",58,"Fareham Running Club",36,3191.0,3183.0,"205"],[43,"Danny Williams","M","",48,"",37,3197.0,3195.0,"268"],[44,"Sam Wheeler","M","",43,"Portsmouth Triathletes",38,3209.0,3201.0,"147"],[45,"Tom Reynolds","M","",27,"",39,3231.0,3225.0,"217"],[46,"Eliza Denton","F","",27,"",7,3231.0,3231.0,"235"],[47,"Paul Meacher","M","",47,"",40,3236.0,3234.0,"212"],[48,"Patrick Tuite","M","",35,"Alton Runners",41,3253.0,3245.0,"275"],[49,"Henry Mayell","M","",28,"",42,3264.0,3259.0,"238"],[50,"Will Mcsheehy","M","",50,"",43,3292.0,3288.0,"250"],[51,"Hugo Moore","M","",51,"",44,3303.0,3297.0,"260"],[52,"Seb Rowland","M","",18,"",45,3349.0,3344.0,"146"],[53,"Madeleine Greaves","F","",20,"",8,3354.0,3348.0,"163"],[54,"Kevin Busch","M","",53,"Gosport Road Runners",46,3359.0,3355.0,"144"],[55,"Conrad Buttery","M","",58,"Portsmouth Triathletes",47,3368.0,3360.0,"225"],[56,"Andy Lucas","M","",46,"",48,3387.0,3378.0,"270"],[57,"Angela Agate","F","",65,"Denmead Striders",9,3424.0,3419.0,"195"],[58,"Rob Reynolds","M","",61,"",49,3431.0,3426.0,"64"],[59,"Matt Jinman","M","",48,"Fareham Running Club",50,3439.0,3432.0,"196"],[60,"Rob Marsh","M","",51,"",51,3464.0,3455.0,"244"],[61,"Richard Moore","M","",64,"",52,3478.0,3461.0,"249"],[62,"Mark Brooks","M","",65,"Fareham Running Club",53,3492.0,3485.0,"189"],[63,"Caroline Stroud","F","",64,"Wimbledon Windmilers",10,3503.0,3496.0,"220"],[64,"Soraya Parker","F","",43,"",11,3508.0,3504.0,"242"],[65,"Danny Rowland","M","",52,"",54,3513.0,3506.0,"22"],[66,"Alex Thompson","M","",19,"",55,3530.0,3528.0,"230"],[67,"Greg Mitchell","M","",19,"",56,3530.0,3527.0,"231"],[68,"Shaun Arnold","M","",51,"",57,3648.0,3639.0,"281"],[69,"Jennifer Fletcher","F","",48,"",12,3650.0,3641.0,"282"],[70,"Viktor Nyics","M","",47,"",58,3657.0,3653.0,"63"],[71,"Saman Jimba","M","",22,"BLF&S Athletics",59,3660.0,3652.0,"272"],[72,"Tamas Kuti","M","",43,"",60,3660.0,3656.0,"65"],[73,"Carrie Haunstrup","F","",48,"Baffins Fitclub",13,3663.0,3656.0,"256"],[74,"David Norrish","M","",42,"",61,3706.0,3699.0,"223"],[75,"Emma Akhurst","F","",36,"",14,3717.0,3710.0,"138"],[76,"Jon Labram","M","",51,"",62,3737.0,3733.0,"215"],[77,"Ben Labram","M","",17,"",63,3737.0,3732.0,"214"],[78,"Harry Allingham","M","",30,"",64,3757.0,3745.0,"263"],[79,"Paul Carter","M","",62,"Portsmouth Triathletes",65,3847.0,3841.0,"209"],[80,"Joseph Brooks","M","",20,"Fareham Running Club",66,3850.0,3842.0,"188"],[81,"Nathan Richardson","M","",43,"",67,3879.0,3868.0,"148"],[82,"Suzanne Gray","F","",53,"Portsmouth Triathletes",15,3896.0,3887.0,"247"],[83,"Lynn Owen","F","",57,"Hiltingbury Long Distance Runners",16,3928.0,3924.0,"227"],[84,"Mike Roberts","M","",64,"",68,3932.0,3924.0,"26"],[85,"Kevin Conroy Scott","M","",52,"",69,3951.0,3935.0,"290"],[86,"Sam Sargant","M","",43,"",70,3974.0,3964.0,"85"],[87,"Nicky Marsh","F","",55,"",17,4041.0,4031.0,"243"],[88,"Louisa Rowlands","F","",52,"",18,4042.0,4038.0,"241"],[89,"David O'Brien","M","",52,"",71,4044.0,4035.0,"194"],[90,"Salvina Cawte","F","",65,"Gosport Road Runners",19,4046.0,4041.0,"140"],[91,"Reuben Budd","M","",25,"",72,4066.0,4060.0,"160"],[92,"Nick Cleeve","M","",43,"",73,4105.0,4096.0,"224"],[93,"Beth May","F","",28,"Portsmouth Joggers",20,4155.0,4143.0,"257"],[94,"Sofia Sanabria De Felipe","F","",26,"",21,4166.0,4155.0,"245"],[95,"Shirley Faichen","F","",71,"Gosport Road Runners",22,4202.0,4195.0,"137"],[96,"Lale Alan","M","",64,"",74,4265.0,4258.0,"156"],[97,"Louise Lee","F","",58,"Portsmouth Joggers",23,4297.0,4286.0,"259"],[98,"Emily Leeming","F","",37,"",24,4309.0,4301.0,"176"],[99,"Laura Dunkley","F","",40,"",25,4386.0,4375.0,"218"],[100,"Alexi Paxman","F","",28,"",26,4392.0,4384.0,"236"],[101,"Claudia Materna","F","",28,"",27,4392.0,4384.0,"262"],[102,"Sandra Humphrey","F","",65,"Sheet Striders",28,4398.0,4388.0,"192"],[103,"Liz James","F","",63,"Stubbington Green Runners",29,4420.0,4415.0,"202"],[104,"Amanda Read","F","",46,"",30,4429.0,4418.0,"285"],[105,"Neil Weaver","M","",46,"",75,4429.0,4419.0,"284"],[106,"Trevor Cowan","M","",63,"",76,4446.0,4432.0,"213"],[107,"Katie Hutchinson","F","",24,"",31,4470.0,4461.0,"240"],[108,"Eleanor Shore","F","",31,"",32,4604.0,4594.0,"273"],[109,"Stephen Cawte","M","",66,"Gosport Road Runners",77,4646.0,4641.0,"142"],[110,"Rory Fall","M","",68,"Gosport Road Runners",78,4646.0,4640.0,"21"],[111,"Clare Welch","F","",48,"Denmead Striders",33,4702.0,4690.0,"35"],[112,"Sarah Wade","F","",60,"Sheet Striders",34,4761.0,4751.0,"179"],[113,"Stacey Page","F","",36,"Portsmouth Joggers",35,4783.0,4772.0,"287"],[114,"Christopher Hughes","M","",36,"",79,4783.0,4772.0,"288"],[115,"Lorna Richard","F","",53,"Sheet Striders",36,4786.0,4774.0,"180"],[116,"Mary W","F","",51,"Portsmouth Joggers",37,4998.0,4987.0,"226"],[117,"Helen Foy","F","",62,"Sheet Striders",38,5045.0,5035.0,"193"]]},{"year":2026,"km":20,"rows":[[1,"Mark Bicknell","M","",52,"Denmead Striders",1,6017.0,6015.0,"29"],[2,"Paul Saunders","M","",38,"Denmead Striders",2,6066.0,6064.0,"76"],[3,"Dan Adams","M","",36,"",3,6313.0,6311.0,"49"],[4,"Richard Pearson","M","",32,"Denmead Striders",4,6518.0,6514.0,"37"],[5,"Hugo Grant","M","",36,"",5,6530.0,6528.0,"51"],[6,"Rob Wilson","M","",48,"Denmead Striders",6,6557.0,6555.0,"126"],[7,"Harry Freeman","M","",23,"",7,6606.0,6602.0,"20"],[8,"Clive Hutchinson","M","",61,"Denmead Striders",8,6721.0,6716.0,"42"],[9,"Gary Armstrong","M","",40,"Denmead Striders",9,6826.0,6823.0,"57"],[10,"Saul Duck","M","",56,"Winchester Running Club",10,6876.0,6872.0,"92"],[11,"Michael Harrison","M","",37,"Denmead Striders",11,6915.0,6911.0,"69"],[12,"Jono Marval","M","",54,"Gade Valley Harriers",12,6926.0,6923.0,"54"],[13,"Patrick Mcfadden","M","",42,"",13,7001.0,6995.0,"88"],[14,"Paul Welch","M","",49,"Denmead Striders",14,7146.0,7141.0,"25"],[15,"Joanna Tester","F","",47,"",1,7217.0,7210.0,"123"],[16,"Tom Allen","M","",38,"",15,7233.0,7226.0,"72"],[17,"Lizzie Reynolds","F","",30,"",2,7293.0,7287.0,"62"],[18,"Ken Houlberg","M","",58,"",16,7304.0,7302.0,"56"],[19,"Darren Hansford","M","",57,"",17,7422.0,7418.0,"30"],[20,"Matthew Duggan","M","",41,"Portsmouth Triathletes",18,7462.0,7458.0,"10"],[21,"David Noble","M","",46,"Denmead Striders",19,7463.0,7459.0,"46"],[22,"Ian Nunn","M","",59,"Portsmouth Triathletes",20,7665.0,7658.0,"12"],[23,"Ben Besley","M","",32,"",21,7671.0,7667.0,"61"],[24,"David Tester","M","",53,"",22,7722.0,7714.0,"2"],[25,"Brent Latham","M","",54,"Maverick Run Project",23,7791.0,7784.0,"71"],[26,"Kristiana Hamshaw","F","",42,"",3,7948.0,7946.0,"34"],[27,"Samantha Morris","F","",40,"Denmead Striders",4,7950.0,7946.0,"32"],[28,"Lisa-Marie Peckover","F","",39,"Denmead Striders",5,7950.0,7945.0,"52"],[29,"Lewis Marsh","M","",43,"Victory AC",24,8232.0,8227.0,"17"],[30,"Alistair Mcniff","M","",43,"Victory AC",25,8233.0,8228.0,"18"],[31,"Samantha Kidd","F","",35,"Maverick Run Project",6,8257.0,8250.0,"36"],[32,"Lee Armstrong","M","",42,"",26,8405.0,8397.0,"13"],[33,"Jake Calvert","M","",44,"",27,8449.0,8444.0,"11"],[34,"Jane Harding","F","",52,"HLDR",7,8473.0,8466.0,"67"],[35,"Craig Osgerby","M","",46,"Winchester Running Club",28,8474.0,8465.0,"68"],[36,"Elle Gray","F","",44,"Running Early/ RunSouth",8,8479.0,8473.0,"4"],[37,"Joel Tanzer","M","",44,"",29,8484.0,8477.0,"106"],[38,"David Taylor","M","",55,"",30,8589.0,8583.0,"24"],[39,"David Gordon-Smith","M","",59,"Maidenhead AC",31,8613.0,8607.0,"23"],[40,"Katie Carew-Robinson","F","",49,"City of Portsmouth AC",9,9206.0,9200.0,"15"],[41,"Lisa Ruddle","F","",49,"",10,9208.0,9202.0,"16"],[42,"Charlotte Townsend","F","",54,"Dorset Doddlers RC",11,9344.0,9338.0,"120"],[43,"Rhiannon Besley","F","",31,"",12,9390.0,9385.0,"60"],[44,"D Pek","M","",41,"",32,9493.0,9489.0,"70"],[45,"Paul Reynolds","M","",49,"Denmead Striders",33,9547.0,9542.0,"40"],[46,"John Stedman","M","",32,"",34,9621.0,9615.0,"33"],[47,"Dan Williamson","M","",29,"",35,9625.0,9619.0,"31"],[48,"Bob Larking","M","",36,"",36,9798.0,9790.0,"27"],[49,"Elise Roberts","F","",31,"",13,9798.0,9790.0,"28"],[50,"Hannah Morgan","F","",36,"",14,10658.0,10653.0,"50"],[51,"Jo Rothwell","F","",35,"",15,10660.0,10655.0,"66"]]}];
+/* RESULTS-DATA:END */
+</script>
+<script>
+// Results archive. RACES is filled in by tools/build_results_page.py from results/*.csv.
+// Each row: [position, name, gender, category, age, club, gender position, time (s), chip time (s), bib]
+const P = 0, NAME = 1, G = 2, CAT = 3, AGE = 4, CLUB = 5, GPOS = 6, TIME = 7, CHIP = 8;
+const VINEYARD_FROM = 2025;
+const DIST_COLOR = { 5: 'var(--d5)', 10: 'var(--d10)', 20: 'var(--d20)' };
+const GENDER_COLOR = { M: 'var(--men)', F: 'var(--women)', '': 'var(--unknown)' };
+const GENDER_WORD = { M: 'Men', F: 'Women', '': 'Not recorded' };
+const DISTANCES = [...new Set(RACES.map(r => r.km))].sort((a, b) => a - b);
+const YEARS = [...new Set(RACES.map(r => r.year))].sort((a, b) => a - b);
+
+RACES.forEach(r => {
+  r.field = Math.max(...r.rows.map(x => x[P]));
+  r.label = `${r.year} ${r.km}K`;
+  r.genderField = { M: 0, F: 0 };
+  r.rows.forEach(x => { if (x[G]) r.genderField[x[G]] = Math.max(r.genderField[x[G]], x[GPOS] || 0); });
+  r.hasChip = r.rows.some(x => x[CHIP] != null);
+});
+
+// Every finish by runner name
+const RUNNERS = new Map();
+RACES.forEach(race => race.rows.forEach(row => {
+  if (!row[NAME]) return;
+  if (!RUNNERS.has(row[NAME])) RUNNERS.set(row[NAME], []);
+  RUNNERS.get(row[NAME]).push({ race, row });
+}));
+
+// ---------- helpers ----------
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function fmtTime(s) {
+  if (s == null) return '—';
+  const tenths = Math.round(s * 10) % 10;
+  const whole = Math.floor(Math.round(s * 10) / 10);
+  const h = Math.floor(whole / 3600), m = Math.floor(whole % 3600 / 60), sec = whole % 60;
+  const ss = String(sec).padStart(2, '0') + (Number.isInteger(s) ? '' : '.' + tenths);
+  return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
+}
+function fmtPace(s, km) {
+  if (s == null) return '—';
+  const p = Math.round(s / km);
+  return `${Math.floor(p / 60)}:${String(p % 60).padStart(2, '0')}`;
+}
+function fmtMinutes(s) {
+  const m = Math.round(s / 60);
+  return m >= 60 ? `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}` : `${m}m`;
+}
+const beatShare = (row, race) => race.field > 1 ? (race.field - row[P]) / (race.field - 1) : 1;
+const ordinal = n => n + (['th', 'st', 'nd', 'rd'][(n % 100 - 20) % 10] || ['th', 'st', 'nd', 'rd'][n % 100] || 'th');
+const median = a => { const s = [...a].sort((x, y) => x - y); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+
+function niceTicks(min, max, count) {
+  const span = max - min || 1;
+  const step0 = span / count;
+  const mag = 10 ** Math.floor(Math.log10(step0));
+  const step = [1, 2, 5, 10].map(m => m * mag).find(s => s >= step0);
+  const ticks = [];
+  for (let v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) ticks.push(+v.toFixed(6));
+  return ticks;
+}
+function timeTicks(min, max) {
+  const steps = [60, 120, 300, 600, 900, 1800, 3600];
+  const step = steps.find(s => (max - min) / s <= 6) || 3600;
+  const ticks = [];
+  for (let v = Math.ceil(min / step) * step; v <= max; v += step) ticks.push(v);
+  return ticks;
+}
+
+// ---------- tooltip ----------
+const tip = $('chart-tip');
+function showTip(html, x, y) {
+  tip.innerHTML = html;
+  tip.hidden = false;
+  const r = tip.getBoundingClientRect();
+  let left = x + 14, top = y + 14;
+  if (left + r.width > innerWidth - 8) left = x - r.width - 14;
+  if (top + r.height > innerHeight - 8) top = y - r.height - 14;
+  tip.style.left = Math.max(8, left) + 'px';
+  tip.style.top = Math.max(8, top) + 'px';
+}
+document.addEventListener('pointermove', e => {
+  const t = e.target.closest?.('[data-tip]');
+  if (t) showTip(t.getAttribute('data-tip'), e.clientX, e.clientY);
+  else tip.hidden = true;
+});
+document.addEventListener('scroll', () => { tip.hidden = true; }, { passive: true });
+
+// Charts render at their container's real width so text stays a readable size.
+const charts = [];
+function chart(el, draw) {
+  const render = () => { el.innerHTML = draw(Math.max(280, el.clientWidth)); };
+  charts.push(render);
+  render();
+}
+let resizeTimer;
+addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => charts.forEach(r => r()), 150); });
+function redraw(el) { charts.forEach(r => r()); }
+
+function svgOpen(w, h, label) {
+  return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="${esc(label)}">`;
+}
+function yGrid(ticks, y, x0, x1, fmt) {
+  return `<g class="grid">${ticks.map(t => `<line x1="${x0}" x2="${x1}" y1="${y(t)}" y2="${y(t)}"/>`).join('')}</g>` +
+    ticks.map(t => `<text x="${x0 - 8}" y="${y(t) + 4}" text-anchor="end">${fmt(t)}</text>`).join('');
+}
+// A bar with a 4px rounded data-end and a square base on the baseline
+function barPath(x, yTop, w, yBase) {
+  const r = Math.min(4, w / 2, (yBase - yTop));
+  if (yBase - yTop <= 0) return '';
+  return `M${x},${yBase}V${yTop + r}Q${x},${yTop} ${x + r},${yTop}H${x + w - r}Q${x + w},${yTop} ${x + w},${yTop + r}V${yBase}Z`;
+}
+
+// ---------- headline tiles ----------
+(function headline() {
+  const finishes = RACES.reduce((n, r) => n + r.rows.length, 0);
+  const tiles = [
+    [finishes.toLocaleString(), 'Finishes'],
+    [RUNNERS.size.toLocaleString(), 'Runners'],
+    [YEARS.length, 'Years of results'],
+    [RACES.length, 'Races'],
+  ];
+  $('headline-tiles').innerHTML = tiles.map(([v, l]) =>
+    `<div class="stat-card"><span class="stat-value">${v}</span><span class="stat-label">${l}</span></div>`).join('');
+  $('hero-eyebrow').textContent = `Results archive · ${YEARS[0]}–${YEARS[YEARS.length - 1]}`;
+})();
+
+// ---------- runner search ----------
+const searchInput = $('runner-search');
+const suggest = $('runner-suggest');
+const NAMES = [...RUNNERS.keys()].sort((a, b) => a.localeCompare(b));
+const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+let suggestItems = [], activeIndex = -1;
+
+function updateSuggest() {
+  const q = norm(searchInput.value.trim());
+  if (q.length < 2) { closeSuggest(); return; }
+  const words = q.split(/\s+/);
+  const matches = NAMES.filter(n => { const nn = norm(n); return words.every(w => nn.includes(w)); });
+  matches.sort((a, b) => (norm(b).startsWith(q) - norm(a).startsWith(q)) || RUNNERS.get(b).length - RUNNERS.get(a).length);
+  suggestItems = matches.slice(0, 10);
+  activeIndex = suggestItems.length ? 0 : -1;
+  suggest.innerHTML = suggestItems.length
+    ? suggestItems.map((n, i) => {
+        const runs = RUNNERS.get(n);
+        const years = [...new Set(runs.map(e => e.race.year))].sort();
+        const span = years.length > 1 ? `${years[0]}–${years[years.length - 1]}` : years[0];
+        return `<li role="option" id="sg-${i}" data-name="${esc(n)}" aria-selected="${i === 0}"><span>${esc(n)}</span><span class="meta">${runs.length} race${runs.length > 1 ? 's' : ''} · ${span}</span></li>`;
+      }).join('')
+    : `<li class="empty">No runner found. Try just a surname.</li>`;
+  suggest.hidden = false;
+  searchInput.setAttribute('aria-expanded', 'true');
+  searchInput.setAttribute('aria-activedescendant', suggestItems.length ? 'sg-0' : '');
+}
+function closeSuggest() {
+  suggest.hidden = true;
+  searchInput.setAttribute('aria-expanded', 'false');
+  searchInput.removeAttribute('aria-activedescendant');
+}
+function moveActive(d) {
+  if (!suggestItems.length) return;
+  activeIndex = (activeIndex + d + suggestItems.length) % suggestItems.length;
+  suggest.querySelectorAll('li').forEach((li, i) => li.setAttribute('aria-selected', String(i === activeIndex)));
+  suggest.querySelector(`#sg-${activeIndex}`)?.scrollIntoView({ block: 'nearest' });
+  searchInput.setAttribute('aria-activedescendant', `sg-${activeIndex}`);
+}
+searchInput.addEventListener('input', updateSuggest);
+searchInput.addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown') { e.preventDefault(); moveActive(1); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); moveActive(-1); }
+  else if (e.key === 'Enter' && activeIndex >= 0 && !suggest.hidden) { e.preventDefault(); showRunner(suggestItems[activeIndex]); }
+  else if (e.key === 'Escape') closeSuggest();
+});
+suggest.addEventListener('pointerdown', e => {
+  const li = e.target.closest('li[data-name]');
+  if (li) { e.preventDefault(); showRunner(li.dataset.name); }
+});
+document.addEventListener('click', e => { if (!e.target.closest('.runner-search')) closeSuggest(); });
+
+// A few regulars to try
+(function hints() {
+  const regulars = [...RUNNERS.entries()].sort((a, b) => b[1].length - a[1].length).slice(0, 3).map(([n]) => n);
+  $('search-hints').innerHTML = 'Try ' + regulars.map(n => `<button type="button" class="link-btn" data-runner="${esc(n)}">${esc(n)}</button>`).join(', ');
+})();
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-runner]');
+  if (b) showRunner(b.dataset.runner);
+});
+
+// ---------- runner profile ----------
+let currentRunner = null;
+
+function showRunner(name, { scroll = true } = {}) {
+  const entries = RUNNERS.get(name);
+  if (!entries) return;
+  currentRunner = name;
+  closeSuggest();
+  searchInput.value = name;
+  history.replaceState(null, '', '#runner=' + encodeURIComponent(name));
+  entries.sort((a, b) => a.race.year - b.race.year || a.race.km - b.race.km);
+
+  $('rp-name').textContent = name;
+  const club = [...entries].reverse().map(e => e.row[CLUB]).find(Boolean);
+  $('rp-club').textContent = club || '';
+
+  // Personal bests per distance (course-era aware: best overall is shown, era noted in table)
+  const tiles = [[entries.length, entries.length === 1 ? 'Hilly finished' : 'Hillys finished']];
+  DISTANCES.forEach(km => {
+    const runs = entries.filter(e => e.race.km === km && e.row[TIME] != null);
+    if (!runs.length) return;
+    const best = runs.reduce((a, b) => (b.row[TIME] < a.row[TIME] ? b : a));
+    tiles.push([fmtTime(best.row[TIME]), `${km}K best · ${best.race.year}`]);
+  });
+  const bestPlace = entries.reduce((a, b) => (b.row[P] < a.row[P] ? b : a));
+  tiles.push([ordinal(bestPlace.row[P]), `Best finish · ${bestPlace.race.label}`]);
+  $('rp-tiles').innerHTML = tiles.map(([v, l]) =>
+    `<div class="stat-card"><span class="stat-value">${esc(v)}</span><span class="stat-label">${esc(l)}</span></div>`).join('');
+
+  // Badges
+  const badges = [];
+  const wins = entries.filter(e => e.row[GPOS] === 1).length;
+  const podiums = entries.filter(e => e.row[GPOS] && e.row[GPOS] <= 3).length;
+  if (wins) badges.push(`${wins}× winner`);
+  if (podiums > wins) badges.push(`${podiums}× podium`);
+  const years = [...new Set(entries.map(e => e.race.year))];
+  if (years.length >= 5) badges.push(`${years.length} years running`);
+  if (years[0] === YEARS[0]) badges.push(`Ran the first Hilly in ${YEARS[0]}`);
+  if (entries.some(e => e.race.km === 20)) badges.push('20K trail finisher');
+  $('rp-badges').innerHTML = badges.map(b => `<li>${esc(b)}</li>`).join('');
+
+  // Table
+  $('rp-table').innerHTML = entries.map(({ race, row }) => {
+    const gp = row[GPOS] ? `${row[GPOS]} of ${race.genderField[row[G]]}` : '—';
+    const cat = row[CAT] || (row[AGE] ? `Age ${row[AGE]}` : '—');
+    return `<tr><td>${race.year}</td><td>${race.km}K</td><td class="num">${row[P]} of ${race.field}</td><td class="num">${gp}</td><td>${esc(cat)}</td>` +
+      `<td class="num">${fmtTime(row[TIME])}</td><td class="num">${fmtPace(row[TIME], race.km)}</td><td class="num">${Math.round(beatShare(row, race) * 100)}%</td></tr>`;
+  }).join('');
+
+  // Legend + chart
+  const kms = [...new Set(entries.map(e => e.race.km))].sort((a, b) => a - b);
+  $('rp-legend').innerHTML = kms.length > 1
+    ? kms.map(km => `<li><span class="sw" style="background:${DIST_COLOR[km]}"></span>${km}K</li>`).join('') : '';
+  $('rp-legend').hidden = kms.length < 2;
+
+  $('runner-profile').hidden = false;
+  if (!runnerChartReady) { chart($('rp-chart'), drawRunnerChart); runnerChartReady = true; } else redraw();
+  selectRaceForRunner(entries);
+  if (scroll) $('runner-profile').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+let runnerChartReady = false;
+
+function drawRunnerChart(w) {
+  if (!currentRunner) return '';
+  const entries = RUNNERS.get(currentRunner);
+  const h = 260, m = { t: 16, r: 20, b: 32, l: 46 };
+  const yrs = YEARS;
+  const x = yr => m.l + (yrs.length === 1 ? (w - m.l - m.r) / 2 : (yrs.indexOf(yr) / (yrs.length - 1)) * (w - m.l - m.r));
+  const y = v => m.t + (1 - v) * (h - m.t - m.b);
+  let s = svgOpen(w, h, `${currentRunner}: share of field beaten in each race`);
+  s += yGrid([0, 0.25, 0.5, 0.75, 1], y, m.l, w - m.r, v => Math.round(v * 100) + '%');
+  s += `<line class="baseline" x1="${m.l}" x2="${w - m.r}" y1="${y(0)}" y2="${y(0)}"/>`;
+  const every = w < 520 ? 2 : 1;
+  yrs.forEach((yr, i) => { if ((yrs.length - 1 - i) % every === 0) s += `<text x="${x(yr)}" y="${h - 10}" text-anchor="middle">${yr}</text>`; });
+  DISTANCES.forEach(km => {
+    const pts = entries.filter(e => e.race.km === km).sort((a, b) => a.race.year - b.race.year);
+    if (pts.length > 1) s += `<polyline fill="none" stroke="${DIST_COLOR[km]}" stroke-width="2" stroke-linejoin="round" points="${pts.map(e => `${x(e.race.year)},${y(beatShare(e.row, e.race))}`).join(' ')}"/>`;
+  });
+  entries.forEach(({ race, row }) => {
+    const cx = x(race.year), cy = y(beatShare(row, race));
+    const t = `<strong>${race.label}</strong><br>${ordinal(row[P])} of ${race.field} · ${fmtTime(row[TIME])}<br>Beat ${Math.round(beatShare(row, race) * 100)}% of the field`;
+    s += `<circle cx="${cx}" cy="${cy}" r="5" fill="${DIST_COLOR[race.km]}" stroke="#fff" stroke-width="2"/>`;
+    s += `<circle class="hit" cx="${cx}" cy="${cy}" r="14" data-tip="${esc(t)}"/>`;
+  });
+  return s + '</svg>';
+}
+
+// ---------- race explorer ----------
+let raceKm = 10, raceYear = null;
+const distTabs = $('race-dist-tabs');
+const yearSelect = $('race-year');
+
+function raceFor(km, year) { return RACES.find(r => r.km === km && r.year === year); }
+function renderDistTabs(el, active, onPick, kms = DISTANCES) {
+  el.innerHTML = kms.map(km =>
+    `<button type="button" class="route-tab${km === active ? ' is-active' : ''}" role="tab" aria-selected="${km === active}" data-km="${km}">${km}K</button>`).join('');
+  el.onclick = e => { const b = e.target.closest('[data-km]'); if (b) onPick(+b.dataset.km); };
+}
+function setRaceKm(km, year) {
+  raceKm = km;
+  const years = RACES.filter(r => r.km === km).map(r => r.year).sort((a, b) => b - a);
+  raceYear = years.includes(year) ? year : years[0];
+  yearSelect.innerHTML = years.map(y => `<option value="${y}"${y === raceYear ? ' selected' : ''}>${y}</option>`).join('');
+  renderDistTabs(distTabs, km, k => setRaceKm(k, raceYear));
+  renderRace();
+}
+yearSelect.addEventListener('change', () => { raceYear = +yearSelect.value; renderRace(); });
+$('race-filter').addEventListener('input', renderRaceTable);
+$('race-gender').addEventListener('change', renderRaceTable);
+
+function selectRaceForRunner(entries) {
+  const latest = entries[entries.length - 1].race;
+  setRaceKm(latest.km, latest.year);
+}
+
+function renderRace() {
+  const race = raceFor(raceKm, raceYear);
+  const winner = g => race.rows.find(r => r[G] === g && r[GPOS] === 1);
+  const timed = race.rows.filter(r => r[TIME] != null).map(r => r[TIME]);
+  const cards = [];
+  [['M', 'First man', 'men'], ['F', 'First woman', '']].forEach(([g, label, cls]) => {
+    const w = winner(g);
+    if (w) cards.push(`<div class="fact-card ${cls}"><span class="fact-label">${label}</span><span class="fact-value"><button type="button" class="link-btn" data-runner="${esc(w[NAME])}" style="color:var(--dark-900)">${esc(w[NAME])}</button></span><span>${fmtTime(w[TIME])}</span></div>`);
+  });
+  cards.push(`<div class="fact-card"><span class="fact-label">Finishers</span><span class="fact-value">${race.field}</span><span>${race.genderField.M} men · ${race.genderField.F} women</span></div>`);
+  cards.push(`<div class="fact-card"><span class="fact-label">Median time</span><span class="fact-value">${fmtTime(Math.round(median(timed)))}</span><span>${fmtPace(median(timed), race.km)} /km</span></div>`);
+  $('race-winners').innerHTML = cards.join('');
+  $('race-hist-title').textContent = `${race.label} finish times`;
+  $('race-hist-sub').textContent = `How many runners finished in each ${histBin(race) / 60}-minute window.` +
+    (currentRunner && race.rows.some(r => r[NAME] === currentRunner) ? ` ${currentRunner}'s finish is marked.` : '');
+  $('race-legend-unknown').hidden = !race.rows.some(r => !r[G]);
+  if (!raceChartReady) { chart($('race-hist'), drawRaceHist); raceChartReady = true; } else redraw();
+  renderRaceTable();
+}
+let raceChartReady = false;
+const histBin = race => ({ 5: 60, 10: 120, 20: 300 }[race.km] || 120);
+
+function drawRaceHist(w) {
+  const race = raceFor(raceKm, raceYear);
+  const bin = histBin(race);
+  const rows = race.rows.filter(r => r[TIME] != null);
+  const lo = Math.floor(Math.min(...rows.map(r => r[TIME])) / bin) * bin;
+  const hi = Math.ceil((Math.max(...rows.map(r => r[TIME])) + 0.01) / bin) * bin;
+  const nb = Math.round((hi - lo) / bin);
+  const bins = Array.from({ length: nb }, () => ({ M: 0, F: 0, '': 0 }));
+  rows.forEach(r => { bins[Math.min(nb - 1, Math.floor((r[TIME] - lo) / bin))][r[G] || '']++; });
+  const maxN = Math.max(...bins.map(b => b.M + b.F + b['']));
+  const h = 260, m = { t: 24, r: 16, b: 34, l: 36 };
+  const bw = (w - m.l - m.r) / nb;
+  const x = t => m.l + ((t - lo) / (hi - lo)) * (w - m.l - m.r);
+  const yTicks = niceTicks(0, maxN, 4).filter(t => Number.isInteger(t));
+  const yMax = Math.max(maxN, yTicks[yTicks.length - 1]);
+  const y = v => m.t + (1 - v / yMax) * (h - m.t - m.b);
+  let s = svgOpen(w, h, `${race.label} finish time distribution`);
+  s += yGrid(yTicks, y, m.l, w - m.r, v => v);
+  bins.forEach((b, i) => {
+    let cum = 0;
+    const x0 = m.l + i * bw + 1, bwInner = Math.max(1, bw - 2);
+    const order = ['M', 'F', ''].filter(g => b[g]);
+    order.forEach((g, j) => {
+      const isTop = j === order.length - 1;
+      // 2px surface gap between stacked segments
+      const segBase = y(cum) - (j ? 1 : 0);
+      const segTop = y(cum + b[g]) + (isTop ? 0 : 1);
+      s += isTop ? `<path d="${barPath(x0, segTop, bwInner, segBase)}" fill="${GENDER_COLOR[g]}"/>`
+                 : `<rect x="${x0}" y="${segTop}" width="${bwInner}" height="${Math.max(0, segBase - segTop)}" fill="${GENDER_COLOR[g]}"/>`;
+      cum += b[g];
+    });
+    const total = b.M + b.F + b[''];
+    const t = `<strong>${fmtTime(lo + i * bin)}–${fmtTime(lo + (i + 1) * bin)}</strong><br>${total} finisher${total === 1 ? '' : 's'}` +
+      (b.M ? `<br>${b.M} men` : '') + (b.F ? `<br>${b.F} women` : '') + (b[''] ? `<br>${b['']} not recorded` : '');
+    s += `<rect class="hit" x="${m.l + i * bw}" y="${m.t}" width="${bw}" height="${h - m.t - m.b}" data-tip="${esc(t)}"/>`;
+  });
+  s += `<line class="baseline" x1="${m.l}" x2="${w - m.r}" y1="${y(0)}" y2="${y(0)}"/>`;
+  timeTicks(lo, hi).forEach(t => { s += `<text x="${x(t)}" y="${h - 12}" text-anchor="middle">${fmtMinutes(t)}</text>`; });
+  const me = currentRunner && race.rows.find(r => r[NAME] === currentRunner && r[TIME] != null);
+  if (me) {
+    const mx = x(me[TIME]);
+    s += `<line x1="${mx}" x2="${mx}" y1="${m.t - 6}" y2="${y(0)}" stroke="var(--dark-900)" stroke-width="2"/>`;
+    const anchor = mx > w - 90 ? 'end' : mx < 90 ? 'start' : 'middle';
+    s += `<text x="${mx}" y="${m.t - 10}" text-anchor="${anchor}" style="fill:var(--dark-900);font-weight:700">${esc(currentRunner.split(' ')[0])} · ${fmtTime(me[TIME])}</text>`;
+  }
+  return s + '</svg>';
+}
+
+function renderRaceTable() {
+  const race = raceFor(raceKm, raceYear);
+  const q = norm($('race-filter').value.trim());
+  const g = $('race-gender').value;
+  const showCat = race.rows.some(r => r[CAT]);
+  const showAge = race.rows.some(r => r[AGE]);
+  const showClub = race.rows.some(r => r[CLUB]);
+  const head = ['Pos', 'Name', 'Gender pos.'];
+  if (showCat) head.push('Category');
+  if (showAge) head.push('Age');
+  if (showClub) head.push('Club');
+  head.push('Time', 'Pace /km');
+  if (race.hasChip) head.push('Chip time');
+  $('race-thead').innerHTML = `<tr>${head.map(h => `<th>${h}</th>`).join('')}</tr>`;
+  const rows = race.rows.filter(r => (!g || r[G] === g) && (!q || norm(`${r[NAME]} ${r[CLUB]}`).includes(q)));
+  $('race-table').innerHTML = rows.length ? rows.map(r => {
+    const gp = r[GPOS] ? `${r[GPOS]} <span class="muted">${r[G] === 'M' ? 'M' : 'F'}</span>` : '—';
+    const name = r[NAME] ? `<button type="button" class="link-btn" data-runner="${esc(r[NAME])}" style="color:inherit;font-weight:inherit;text-decoration:none">${esc(r[NAME])}</button>` : '<span class="muted">Unknown</span>';
+    let cells = `<td class="num">${r[P]}</td><td>${name}</td><td class="num">${gp}</td>`;
+    if (showCat) cells += `<td>${esc(r[CAT])}</td>`;
+    if (showAge) cells += `<td class="num">${r[AGE] ?? ''}</td>`;
+    if (showClub) cells += `<td>${esc(r[CLUB])}</td>`;
+    cells += `<td class="num">${fmtTime(r[TIME])}</td><td class="num">${fmtPace(r[TIME], race.km)}</td>`;
+    if (race.hasChip) cells += `<td class="num">${fmtTime(r[CHIP])}</td>`;
+    return `<tr${r[NAME] && r[NAME] === currentRunner ? ' class="is-me"' : ''}>${cells}</tr>`;
+  }).join('') : `<tr><td colspan="${head.length}" class="muted">No runners match.</td></tr>`;
+}
+
+// ---------- through the years ----------
+(function fieldChart() {
+  $('field-legend').innerHTML = DISTANCES.map(km => `<li><span class="sw" style="background:${DIST_COLOR[km]}"></span>${km}K</li>`).join('');
+  chart($('field-chart'), w => {
+    const h = 280, m = { t: 20, r: 12, b: 32, l: 40 };
+    const totals = YEARS.map(yr => RACES.filter(r => r.year === yr).reduce((n, r) => n + r.field, 0));
+    const ticks = niceTicks(0, Math.max(...totals), 4);
+    const yMax = ticks[ticks.length - 1];
+    const y = v => m.t + (1 - v / yMax) * (h - m.t - m.b);
+    const slot = (w - m.l - m.r) / YEARS.length;
+    const bw = Math.min(44, slot * 0.62);
+    let s = svgOpen(w, h, 'Finishers each year by distance');
+    s += yGrid(ticks, y, m.l, w - m.r, v => v);
+    YEARS.forEach((yr, i) => {
+      const cx = m.l + slot * (i + 0.5), x0 = cx - bw / 2;
+      const segs = DISTANCES.map(km => [km, raceFor(km, yr)]).filter(([, r]) => r);
+      let base = 0;
+      segs.forEach(([km, r], j) => {
+        const isTop = j === segs.length - 1;
+        const yb = y(base) - (j ? 1 : 0), yt = y(base + r.field) + (isTop ? 0 : 1);
+        s += isTop ? `<path d="${barPath(x0, yt, bw, yb)}" fill="${DIST_COLOR[km]}"/>`
+                   : `<rect x="${x0}" y="${yt}" width="${bw}" height="${Math.max(0, yb - yt)}" fill="${DIST_COLOR[km]}"/>`;
+        base += r.field;
+      });
+      const t = `<strong>${yr}</strong> · ${totals[i]} finishers` + segs.map(([km, r]) => `<br>${km}K: ${r.field}`).join('');
+      s += `<rect class="hit" x="${m.l + slot * i}" y="${m.t}" width="${slot}" height="${h - m.t - m.b}" data-tip="${esc(t)}"/>`;
+      if (i === YEARS.length - 1 || totals[i] === Math.max(...totals))
+        s += `<text x="${cx}" y="${y(totals[i]) - 6}" text-anchor="middle" style="fill:var(--dark-900);font-weight:700">${totals[i]}</text>`;
+      const lbl = w < 480 ? `'${String(yr).slice(2)}` : yr;
+      s += `<text x="${cx}" y="${h - 12}" text-anchor="middle">${lbl}</text>`;
+    });
+    s += `<line class="baseline" x1="${m.l}" x2="${w - m.r}" y1="${y(0)}" y2="${y(0)}"/>`;
+    return s + '</svg>';
+  });
+})();
+
+let winKm = 10;
+function renderWinTabs() { renderDistTabs($('win-dist-tabs'), winKm, km => { winKm = km; renderWinTabs(); redraw(); }); }
+renderWinTabs();
+chart($('win-chart'), w => {
+  const races = RACES.filter(r => r.km === winKm);
+  const yrs = races.map(r => r.year);
+  const series = ['M', 'F'].map(g => ({ g, pts: races.map(r => [r, r.rows.find(x => x[G] === g && x[GPOS] === 1)]).filter(([, x]) => x && x[TIME] != null) }));
+  const all = series.flatMap(s => s.pts.map(([, x]) => x[TIME]));
+  const ticks = timeTicks(Math.min(...all) * 0.95, Math.max(...all) * 1.05);
+  const lo = Math.min(ticks[0], Math.min(...all)) , hi = Math.max(ticks[ticks.length - 1], Math.max(...all));
+  const h = 260, m = { t: 16, r: 24, b: 32, l: 52 };
+  const pad = yrs.length === 1 ? 0.5 : 0;
+  const x = yr => m.l + ((yrs.indexOf(yr) + pad) / Math.max(1, yrs.length - 1 + pad * 2)) * (w - m.l - m.r);
+  const y = v => m.t + (1 - (v - lo) / (hi - lo)) * (h - m.t - m.b);
+  let s = svgOpen(w, h, `Winning ${winKm}K times by year`);
+  // shade vineyard-course years
+  const vy = yrs.filter(yr => yr >= VINEYARD_FROM);
+  if (vy.length) {
+    const step = yrs.length > 1 ? (w - m.l - m.r) / (yrs.length - 1) : w;
+    const x0 = Math.max(m.l, x(vy[0]) - step / 2), x1 = w - m.r + 8;
+    s += `<rect x="${x0}" y="${m.t}" width="${x1 - x0}" height="${h - m.t - m.b}" fill="var(--gold-100)" opacity="0.6"/>`;
+  }
+  s += yGrid(ticks, y, m.l, w - m.r, fmtMinutes);
+  const every = w < 480 && yrs.length > 6 ? 2 : 1;
+  yrs.forEach((yr, i) => { if ((yrs.length - 1 - i) % every === 0) s += `<text x="${x(yr)}" y="${h - 10}" text-anchor="middle">${yr}</text>`; });
+  series.forEach(({ g, pts }) => {
+    if (pts.length > 1) s += `<polyline fill="none" stroke="${GENDER_COLOR[g]}" stroke-width="2" stroke-linejoin="round" points="${pts.map(([r, x2]) => `${x(r.year)},${y(x2[TIME])}`).join(' ')}"/>`;
+    pts.forEach(([r, x2]) => {
+      const t = `<strong>${r.label} · first ${g === 'M' ? 'man' : 'woman'}</strong><br>${esc(x2[NAME])}<br>${fmtTime(x2[TIME])}`;
+      s += `<circle cx="${x(r.year)}" cy="${y(x2[TIME])}" r="4.5" fill="${GENDER_COLOR[g]}" stroke="#fff" stroke-width="2"/>`;
+      s += `<circle class="hit" cx="${x(r.year)}" cy="${y(x2[TIME])}" r="13" data-tip="${esc(t)}"/>`;
+    });
+  });
+  return s + '</svg>';
+});
+
+chart($('women-chart'), w => {
+  const h = 220, m = { t: 22, r: 16, b: 32, l: 44 };
+  const pts = YEARS.map(yr => {
+    const rows = RACES.filter(r => r.year === yr).flatMap(r => r.rows).filter(r => r[G]);
+    return [yr, rows.filter(r => r[G] === 'F').length / rows.length, rows.length];
+  });
+  const x = yr => m.l + (YEARS.indexOf(yr) / (YEARS.length - 1)) * (w - m.l - m.r);
+  const y = v => m.t + (1 - v / 0.6) * (h - m.t - m.b);
+  let s = svgOpen(w, h, 'Share of finishers who were women, by year');
+  s += yGrid([0, 0.2, 0.4, 0.6], y, m.l, w - m.r, v => Math.round(v * 100) + '%');
+  s += `<line x1="${m.l}" x2="${w - m.r}" y1="${y(0.5)}" y2="${y(0.5)}" stroke="#cfc7b2" stroke-width="1"/>`;
+  s += `<text x="${w - m.r}" y="${y(0.5) - 6}" text-anchor="end">Half the field</text>`;
+  s += `<polyline fill="none" stroke="var(--women)" stroke-width="2" stroke-linejoin="round" points="${pts.map(([yr, v]) => `${x(yr)},${y(v)}`).join(' ')}"/>`;
+  const every = w < 480 ? 2 : 1;
+  pts.forEach(([yr, v, n], i) => {
+    s += `<circle cx="${x(yr)}" cy="${y(v)}" r="4.5" fill="var(--women)" stroke="#fff" stroke-width="2"/>`;
+    s += `<circle class="hit" cx="${x(yr)}" cy="${y(v)}" r="14" data-tip="${esc(`<strong>${yr}</strong><br>${Math.round(v * 100)}% women<br>${n} finishers with gender recorded`)}"/>`;
+    if ((pts.length - 1 - i) % every === 0) s += `<text x="${x(yr)}" y="${h - 10}" text-anchor="middle">${w < 480 ? `'${String(yr).slice(2)}` : yr}</text>`;
+  });
+  const [ly, lv] = pts[pts.length - 1];
+  s += `<text x="${x(ly)}" y="${y(lv) - 10}" text-anchor="middle" style="fill:var(--dark-900);font-weight:700">${Math.round(lv * 100)}%</text>`;
+  return s + '</svg>';
+});
+
+(function records() {
+  const eras = [['Village course', yr => yr < VINEYARD_FROM], ['Vineyard course', yr => yr >= VINEYARD_FROM]];
+  const out = [];
+  DISTANCES.forEach(km => eras.forEach(([era, inEra]) => {
+    const races = RACES.filter(r => r.km === km && inEra(r.year));
+    if (!races.length) return;
+    const best = g => races.flatMap(r => r.rows.filter(x => x[G] === g && x[TIME] != null).map(x => [x, r]))
+      .reduce((a, b) => (!a || b[0][TIME] < a[0][TIME] ? b : a), null);
+    const cell = b => b ? `${fmtTime(b[0][TIME])}<br><button type="button" class="link-btn" data-runner="${esc(b[0][NAME])}" style="font-weight:400">${esc(b[0][NAME])}</button> <span class="muted">${b[1].year}</span>` : '—';
+    out.push(`<tr><td>${km}K<br><span class="muted" style="font-weight:400">${era}</span></td><td>${cell(best('M'))}</td><td>${cell(best('F'))}</td></tr>`);
+  }));
+  $('records-table').innerHTML = out.join('');
+})();
+
+// ---------- hall of fame ----------
+function board(el, items) {
+  const max = items[0]?.[1] || 1;
+  el.innerHTML = items.map(([name, n, sub, rank]) =>
+    `<li><span class="rank">${rank}</span><span class="who"><button type="button" class="link-btn" data-runner="${esc(name)}">${esc(name)}</button>` +
+    `<div class="bar" style="width:${(n / max) * 100}%" data-tip="${esc(`<strong>${name}</strong><br>${sub}`)}"></div></span><span class="val">${n}</span></li>`).join('');
+}
+(function hallOfFame() {
+  // Tied scores share a rank (1, 1, 1, 1, 5...). A tie at the cut-off is shown in full,
+  // unless that would make the board much longer than k, in which case the tied group is left off.
+  const top = (pairs, k) => {
+    pairs.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    pairs.forEach(p => { p[3] = 1 + pairs.filter(q => q[1] > p[1]).length; });
+    const inTop = pairs.filter(p => p[3] <= k);
+    return inTop.length <= k * 1.5 ? inTop : inTop.filter(p => p[3] + pairs.filter(q => q[1] === p[1]).length - 1 <= k);
+  };
+  const fin = [...RUNNERS.entries()].map(([n, e]) => {
+    const yrs = [...new Set(e.map(x => x.race.year))].sort();
+    return [n, e.length, `${e.length} finishes · ${yrs.join(', ')}`];
+  });
+  board($('board-finishes'), top(fin, 10));
+  const wins = [...RUNNERS.entries()].map(([n, e]) => {
+    const w = e.filter(x => x.row[GPOS] === 1);
+    return [n, w.length, w.map(x => x.race.label).join(', ')];
+  }).filter(x => x[1] > 0);
+  board($('board-wins'), top(wins, 10));
+})();
+
+// ---------- start ----------
+setRaceKm(10, YEARS[YEARS.length - 1]);
+const fromHash = decodeURIComponent((location.hash.match(/^#runner=(.+)$/) || [])[1] || '');
+if (RUNNERS.has(fromHash)) showRunner(fromHash, { scroll: false }), $('runner').scrollIntoView();
+
+$('rp-share').addEventListener('click', async () => {
+  const btn = $('rp-share');
+  try { await navigator.clipboard.writeText(location.href); btn.textContent = 'Link copied'; }
+  catch { btn.textContent = 'Copy the address bar'; }
+  setTimeout(() => { btn.textContent = 'Copy link'; }, 2000);
+});
+</script>
+<script src="js/main.js"></script>
+</body>
+</html>
